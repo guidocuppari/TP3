@@ -7,7 +7,6 @@ from biblioteca import camino_minimo_bfs
 class Recomendify:
     def __init__(self):
         self.grafo_bipartito = Grafo(es_dirigido=False)
-        self.grafo_playlists = Grafo(es_dirigido=False)
         self.diccionario = {} #dicionario con el nombre como clave y el valor es una tupla de cancion y playlist en la que aparece
 
     def cargar_diccionario (self, datos):
@@ -53,11 +52,33 @@ class Recomendify:
 
         return " --> ".join(resultado)
 
-    def obtener_playlist(self, usuario, cancion):
-        for c, playlist in self.diccionario[usuario]:
-            if c == cancion:
-                return playlist
-            return None
+    def calcular_page_rank(self, d = 0.85, iteraciones = 100):
+        nodos = self.grafo_bipartito.obtener_vertices()
 
+        n = len(nodos)
+        pagerank = (1 / n for nodo in nodos)
 
+        for _ in range(iteraciones):
+            nuevo_pagerank = {}
+            for nodo in nodos:
+                suma = 0
+                for vecino in self.grafo_bipartito.adyacentes(nodo):
+                    suma += pagerank[vecino] / self.grafo_bipartito.grado_salida(vecino)
+                    nuevo_pagerank[nodo] = (1 - d) / n + d * suma
+                pagerank = nuevo_pagerank
+
+                return pagerank
+
+    def es_cancion(self, nodo):
+        return nodo not in self.diccionario
+
+    def mas_importantes(self, n):
+        pagerank = self.calcular_page_rank(self.grafo_bipartito)
+
+        canciones = {
+            nodo: valor for nodo, valor in pagerank.items() if self.es_cancion(nodo)
+        }
+        canciones_ordenadas = sorted(canciones, key=lambda x: x[1], reverse=True)
+
+        return canciones_ordenadas[:n]
 

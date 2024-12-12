@@ -71,3 +71,6 @@ class Grafo:
             raise AssertionError("El grafo no tiene vertices")
         vertices = self.obtener_vertices()
         return vertices[random.randint(0, len(self.vertices))]
+
+    def grado_salida(self, vertice):
+        return len(self.adyacentes(vertice))
