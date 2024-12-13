@@ -9,7 +9,7 @@ class Recomendify:
         self.grafo_bipartito = Grafo(es_dirigido=False)
         self.diccionario = {} #dicionario con el nombre como clave y el valor es una tupla de cancion y playlist en la que aparece
 
-    def cargar_diccionario (self, datos):
+    def cargar_diccionario(self, datos):
         for nombre, playlist, cancion in datos:
             if nombre not in self.diccionario:
                 self.diccionario[nombre] = []
@@ -27,7 +27,7 @@ class Recomendify:
         padres, _ = camino_minimo_bfs(self.grafo_bipartito, cancion_origen)
 
         if cancion_destino not in padres:
-            return "No se encontró recorrido"
+            return "No se encontro recorrido"
 
         recorrido = []
         actual = cancion_destino
@@ -54,9 +54,8 @@ class Recomendify:
 
     def calcular_page_rank(self, d = 0.85, iteraciones = 100):
         nodos = self.grafo_bipartito.obtener_vertices()
-
         n = len(nodos)
-        pagerank = (1 / n for nodo in nodos)
+        pagerank = {nodo: 1 / n for nodo in nodos}
 
         for _ in range(iteraciones):
             nuevo_pagerank = {}
@@ -82,3 +81,30 @@ class Recomendify:
 
         return canciones_ordenadas[:n]
 
+    def page_rank_personalizado(self, cancion, d = 0.85, iteraciones = 100):
+        nodos = self.grafo_bipartito.obtener_vertices()
+        n = len(nodos)
+        pagerank = {nodo: 1 / n for nodo in nodos}
+
+        probas = {nodo: (1 if nodo == cancion else 0) for nodo in nodos}
+
+        probas = {nodo: valor/sum(probas.values()) for nodo, valor in probas.items()}
+
+        for _ in range(iteraciones):
+            nuevo_pagerank = {}
+            for nodo in nodos:
+                suma = 0
+                for vecino in self.grafo_bipartito.adyacentes(nodo):
+                    suma += pagerank[vecino] / self.grafo_bipartito.grado_salida(vecino)
+                nuevo_pagerank[nodo] = (1 - d) * probas[nodo] + d * suma
+            pagerank = nuevo_pagerank
+
+        return pagerank
+
+    def recomendar_canciones(self, n, canciones):
+        pass
+
+    def recomendar_usuarios(self, n, canciones):
+        pass
+
+        
