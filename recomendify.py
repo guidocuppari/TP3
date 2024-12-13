@@ -145,7 +145,11 @@ class Recomendify:
         if len(ciclo) != n:
             return "No se encontro recorrido"
         
-        # imprimir
+        ciclo_unido = [f"{cancion} -->" for cancion in ciclo[:-1]] + [ciclo[-1]]
+        return ciclo_unido
+
+    def todas_en_rango(self, n, cancion):
+        pass
         
 
 
