@@ -1,7 +1,7 @@
 from grafos import Grafo
 from heap import Heap
 from pila import PilaDinamica
-from biblioteca import camino_minimo_bfs
+from biblioteca import camino_minimo_bfs, dfs
 
 
 class Recomendify:
@@ -128,9 +128,24 @@ class Recomendify:
         
         return recomendaciones
 
-    def reconstruir_ciclo(padres, inicio, fin):
-        pass
+    def reconstruir_ciclo(padres, inicio, contador):
+        v = inicio
+        camino = []
+        while contador > 0 or padres[v] != None:
+            contador -= 1
+            camino.append(v)
+            v = padres[v]
+        camino.append(v)
+        return camino
 
     def ciclo_n_canciones(self, n, cancion):
-        pass
+        padres, _ = dfs(self.grafo_bipartito, cancion)
+        cont = n
+        ciclo = self.reconstruir_ciclo(padres, cancion, cont)
+        if len(ciclo) != n:
+            return "No se encontro recorrido"
+        
+        # imprimir
+        
+
 
