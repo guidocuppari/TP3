@@ -2,6 +2,8 @@ from grafos import Grafo
 from heap import Heap
 from pila import PilaDinamica
 from biblioteca import camino_minimo_bfs, dfs, bfs_distancias
+import argparse
+import os
 
 
 class Recomendify:
@@ -10,7 +12,7 @@ class Recomendify:
         self.diccionario = {} #dicionario con el nombre como clave y el valor es una tupla de cancion y playlist en la que aparece
 
     def cargar_diccionario(self, datos):
-        for nombre, playlist, cancion in datos:
+        for nombre, cancion, playlist in datos:
             if nombre not in self.diccionario:
                 self.diccionario[nombre] = []
             self.diccionario[nombre].append(cancion, playlist)
@@ -151,4 +153,27 @@ class Recomendify:
         return len(en_rango)
         
 
+def main():
+    param = argparse.ArgumentParser(None)
+    param.add_argument("ruta", type=str)
+    archivo = param.parse_args()
+
+    if not os.path.isfile(archivo.ruta):
+        return "Error"
+    
+    with open(archivo.ruta, 'r') as arc:
+        for linea in arc:
+            info = linea.strip().split("\t")
+            imp = []
+            imp.append((info[1], info[2], info[5]))
+
+    for datos in imp:
+        Recomendify.cargar_diccionario(datos)
+    
+    Recomendify.cargar_grafo()
+    
+
+
+if __name__ == "__main__":
+    main()
 
