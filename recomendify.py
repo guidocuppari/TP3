@@ -87,7 +87,6 @@ class Recomendify:
         pagerank = {nodo: 1 / n for nodo in nodos}
 
         probas = {nodo: (1 if nodo == cancion else 0) for nodo in nodos}
-
         probas = {nodo: valor/sum(probas.values()) for nodo, valor in probas.items()}
 
         for _ in range(iteraciones):
@@ -116,7 +115,6 @@ class Recomendify:
 
     def recomendar_usuarios(self, n, canciones):
         recomendaciones = {}
-
         for cancion in canciones:
             pagerank_perso = self.page_rank_personalizado(self.grafo_bipartito, cancion)
             usuarios = {
