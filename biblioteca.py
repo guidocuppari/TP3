@@ -110,6 +110,22 @@ def topologico_entrada(grafo):
                 q.encolar(w)
     return resultado
 
+def dfs_rec(grafo, vertice, visitados, padres, orden):
+    visitados.add(vertice)
+    for w in grafo.adyacentes(vertice):
+        if w not in visitados:
+            padres[w] = vertice
+            orden[w] = orden[vertice] + 1
+            dfs_rec(grafo, w, visitados, padres, orden)
+
+def dfs(grafo, origen):
+    visitados = set()
+    padres = {}
+    orden = {}
+    padres[origen] = None
+    orden[origen] = 0
+    dfs_rec(grafo, origen, visitados, padres, orden)
+    return padres, orden
 
 
 
