@@ -127,6 +127,24 @@ def dfs(grafo, origen):
     dfs_rec(grafo, origen, visitados, padres, orden)
     return padres, orden
 
+def bfs_distancias(grafo, origen, n):
+    distancias = {}
+    lista = []
+    q = Cola()
+    q.encolar(origen)
+    distancias[origen] = 0
+
+    while not q.esta_vacia():
+        v = q.desencolar()
+        if distancias[w] > n:
+            return lista
+        for w in grafo.adyacentes(v):
+            if w not in distancias:
+                distancias[w] = distancias[v] + 1
+                q.encolar(w)
+                if distancias[w] == n:
+                    lista.append(w)
+
 
 
 
