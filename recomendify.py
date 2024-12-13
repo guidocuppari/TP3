@@ -153,6 +153,10 @@ class Recomendify:
         return len(en_rango)
         
 
+
+
+
+
 def main():
     param = argparse.ArgumentParser(None)
     param.add_argument("ruta", type=str)
@@ -165,13 +169,17 @@ def main():
         for linea in arc:
             info = linea.strip().split("\t")
             imp = []
-            imp.append((info[1], info[2], info[5]))
+            imp.append((info[1], info[2] + " " + info[3], info[5]))
 
     for datos in imp:
         Recomendify.cargar_diccionario(datos)
     
     Recomendify.cargar_grafo()
-    
+
+
+
+
+
 
 
 if __name__ == "__main__":
