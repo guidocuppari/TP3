@@ -1,7 +1,7 @@
 from grafos import Grafo
 from heap import Heap
 from pila import PilaDinamica
-from biblioteca import camino_minimo_bfs, dfs
+from biblioteca import camino_minimo_bfs, dfs, bfs_distancias
 
 
 class Recomendify:
@@ -147,7 +147,8 @@ class Recomendify:
         return ciclo_unido
 
     def todas_en_rango(self, n, cancion):
-        pass
+        en_rango = bfs_distancias(self.grafo_bipartito, cancion, n)
+        return len(en_rango)
         
 
 
