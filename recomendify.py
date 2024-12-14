@@ -15,7 +15,7 @@ class Recomendify:
         for nombre, cancion, playlist in datos:
             if nombre not in self.diccionario:
                 self.diccionario[nombre] = []
-            self.diccionario[nombre].append(cancion, playlist)
+            self.diccionario[nombre].append((cancion, playlist))
 
     def cargar_grafo(self):
         for (user_id, nombre), canciones in self.diccionario.items():
@@ -168,16 +168,16 @@ def main():
 
     if not os.path.isfile(archivo.ruta):
         return "Error"
-    
+    imp = []
     with open(archivo.ruta, 'r') as arc:
         next(arc)
         for linea in arc:
             info = linea.strip().split("\t")
-            imp = []
             user = info[1]
             nombre_cancion = info[2]
             artista = info[3]
             nombre_playlist = info[5]
+            imp.append((user, (nombre_cancion, artista), nombre_playlist))
 
 
     for datos in imp:
