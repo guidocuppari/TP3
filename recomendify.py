@@ -113,7 +113,11 @@ class Recomendify:
             similares = [nodo for nodo, _ in canciones_ordenadas if nodo != cancion]
             recomendaciones[cancion] = similares
 
-        return recomendaciones
+        resultado = []
+        
+
+            
+
 
     def recomendar_usuarios(self, n, canciones):
         recomendaciones = {}
@@ -170,7 +174,11 @@ def main():
         for linea in arc:
             info = linea.strip().split("\t")
             imp = []
-            imp.append((info[1], info[2] + " " + info[3], info[5]))
+            user = info[1]
+            nombre_cancion = info[2]
+            artista = info[3]
+            nombre_playlist = info[5]
+
 
     for datos in imp:
         Recomendify.cargar_diccionario(datos)
