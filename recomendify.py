@@ -184,7 +184,25 @@ def main():
             break
         entradas.append(linea)
 
-    
+    for entrada in entradas:
+        datos = entrada.split()
+        comando = datos[0]
+        if comando == "corto":
+            return
+        elif comando == "mas_importantes":
+            canciones = Recomendify.mas_importantes(datos[1])
+        elif comando == "recomendacion":
+            if datos[1] == "canciones":
+                return
+            else:
+                return
+        elif comando == "ciclo":
+            return
+        else:
+            return
+        
+
+
 
 
 
