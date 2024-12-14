@@ -104,7 +104,7 @@ class Recomendify:
         return pagerank
 
     def recomendar_canciones(self, n, canciones_iniciales):
-        recomendaciones = {}
+        pagerank_totales = {}
         for cancion in canciones_iniciales:
             pagerank_perso = self.page_rank_personalizado(self.grafo_bipartito, cancion)
             filtrar_canciones = {}
@@ -112,25 +112,23 @@ class Recomendify:
                 if self.es_cancion(c) and c != cancion:
                     filtrar_canciones[c] = pr
             
-            canciones_ordenadas = sorted(filtrar_canciones.items(), key=lambda x: x[1], reverse=True)
-            recomendaciones[cancion] = canciones_ordenadas
+            pagerank_totales.update(filtrar_canciones)
         
-
-        # extraer las n canciones
-
+        canciones_ordenadas = sorted(pagerank_totales.items(), key=lambda x: x[1], reverse=True)
+        return canciones_ordenadas[:n]
 
     def recomendar_usuarios(self, n, canciones):
-        recomendaciones = {}
+        pagerank_totales = {}
         for cancion in canciones:
             pagerank_perso = self.page_rank_personalizado(self.grafo_bipartito, cancion)
             filtrar_usuarios = {}
             for c, pr in pagerank_perso.items():
                 if not self.es_cancion(c):
                     filtrar_usuarios[c] = pr
-            usuarios_ordenados = sorted(filtrar_usuarios.items(), key=lambda x: x[1], reverse=True)
-            recomendaciones[cancion] = usuarios_ordenados
+            pagerank_totales.update(filtrar_usuarios)
         
-        # extraer los n usarios
+        usuarios_ordenados = sorted(pagerank_totales.items(), key=lambda x: x[1], reverse=True)
+        return usuarios_ordenados[:n]
 
     def reconstruir_ciclo(padres, inicio, contador):
         v = inicio
