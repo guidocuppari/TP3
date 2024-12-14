@@ -226,7 +226,12 @@ def main():
             tupla.append((cancion[0], cancion[1]))
             ciclo = Recomendify.ciclo_n_canciones(largo, tupla)
         else:
-            rango = Recomendify.todas_en_rango(datos[1], datos[2])
+            mas_datos = resto.split(" ", 1)
+            saltos = mas_datos[0]
+            cancion = mas_datos[1].split(" - ", 1)
+            tupla = []
+            tupla.append((cancion[0], cancion[1]))
+            rango = Recomendify.todas_en_rango(saltos, tupla)
         
 
 if __name__ == "__main__":
