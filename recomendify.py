@@ -147,18 +147,15 @@ class Recomendify:
         if len(ciclo) != n:
             return "No se encontro recorrido"
         
-        ciclo_unido = [f"{cancion - artista} -->" for (cancion, artista) in ciclo[:-1]] + [ciclo[-1]]
-        return ciclo_unido
+        ciclo_unido = []
+        for (cancion, artista) in ciclo:
+            ciclo_unido.append(f"{cancion} - {artista}")
+        return " --> ".join(ciclo_unido)
 
     def todas_en_rango(self, n, cancion):
         en_rango = bfs_distancias(self.grafo_bipartito, cancion, n)
         return len(en_rango)
         
-
-
-
-
-
 def main():
     param = argparse.ArgumentParser(None)
     param.add_argument("ruta", type=str)
