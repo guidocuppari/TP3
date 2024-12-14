@@ -205,10 +205,19 @@ def main():
         elif comando == "mas_importantes":
             canciones = Recomendify.mas_importantes(resto)
         elif comando == "recomendacion":
-            if datos[1] == "canciones":
-                canciones_rec = Recomendify.recomendar_canciones(datos[2], )
+            info = resto.split(" ", 2)
+            tipo = info[0]
+            cantidad = info[1]
+            canciones = info[2]
+            divididas = canciones.split(">>>>")
+            tuplas = []
+            for cancion in divididas:
+                actual = cancion.split(" - ", 1)
+                tuplas.append((actual[0], actual[1]))
+            if tipo == "canciones":
+                canciones_rec = Recomendify.recomendar_canciones(datos[2], cantidad, tuplas)
             else:
-                usuarios_rec = Recomendify.recomendar_usuarios(datos[2])
+                usuarios_rec = Recomendify.recomendar_usuarios(datos[2], cantidad, tuplas)
         elif comando == "ciclo":
             ciclo = Recomendify.ciclo_n_canciones(datos[1], datos[2])
         else:
