@@ -219,7 +219,12 @@ def main():
             else:
                 usuarios_rec = Recomendify.recomendar_usuarios(datos[2], cantidad, tuplas)
         elif comando == "ciclo":
-            ciclo = Recomendify.ciclo_n_canciones(datos[1], datos[2])
+            mas_datos = resto.split(" ", 1)
+            largo = mas_datos[0]
+            cancion = mas_datos[1].split(" - ", 1)
+            tupla = []
+            tupla.append((cancion[0], cancion[1]))
+            ciclo = Recomendify.ciclo_n_canciones(largo, tupla)
         else:
             rango = Recomendify.todas_en_rango(datos[1], datos[2])
         
