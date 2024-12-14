@@ -176,8 +176,14 @@ def main():
     
     Recomendify.cargar_grafo()
 
+    entradas = []
+    while True:
+        linea = input()
+        if linea == "":
+            break
+        entradas.append(linea)
 
-
+    
 
 
 
