@@ -166,6 +166,7 @@ def main():
         return "Error"
     
     with open(archivo.ruta, 'r') as arc:
+        next(arc)
         for linea in arc:
             info = linea.strip().split("\t")
             imp = []
