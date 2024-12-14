@@ -65,10 +65,10 @@ class Recomendify:
                 suma = 0
                 for vecino in self.grafo_bipartito.adyacentes(nodo):
                     suma += pagerank[vecino] / self.grafo_bipartito.grado_salida(vecino)
-                    nuevo_pagerank[nodo] = (1 - d) / n + d * suma
-                pagerank = nuevo_pagerank
+                nuevo_pagerank[nodo] = (1 - d) / n + d * suma
+            pagerank = nuevo_pagerank
 
-                return pagerank
+        return pagerank
 
     def es_cancion(self, nodo):
         return nodo not in self.diccionario
@@ -188,24 +188,19 @@ def main():
         datos = entrada.split()
         comando = datos[0]
         if comando == "corto":
-            return
+            Recomendify.camino_minimo()
         elif comando == "mas_importantes":
             canciones = Recomendify.mas_importantes(datos[1])
         elif comando == "recomendacion":
             if datos[1] == "canciones":
-                return
+                canciones_rec = Recomendify.recomendar_canciones(datos[2], )
             else:
-                return
+                usuarios_rec = Recomendify.recomendar_usuarios(datos[2])
         elif comando == "ciclo":
-            return
+            ciclo = Recomendify.ciclo_n_canciones(datos[1], datos[2])
         else:
-            return
+            rango = Recomendify.todas_en_rango(datos[1], datos[2])
         
-
-
-
-
-
 
 if __name__ == "__main__":
     main()
