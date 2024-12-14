@@ -20,7 +20,7 @@ class Recomendify:
     def cargar_grafo(self):
         for nombre_user, canciones in self.diccionario.items(): #canciones es una tupla (cancion, nombre_playlist)
             self.grafo_bipartito.agregar_vertice(nombre_user)
-            for cancion, _ in canciones: #guardamos solo el nombre de la cancion y el artista
+            for (cancion, _) in canciones: #guardamos solo el nombre de la cancion y el artista
                 if cancion not in self.grafo_bipartito.obtener_vertices(self.grafo_bipartito):
                     self.grafo_bipartito.agregar_vertice(cancion)
                 self.grafo_bipartito.agregar_arista(nombre_user, cancion)
@@ -89,7 +89,8 @@ class Recomendify:
         pagerank = {nodo: 1 / n for nodo in nodos}
 
         probas = {nodo: (1 if nodo == cancion else 0) for nodo in nodos}
-        probas = {nodo: valor/sum(probas.values()) for nodo, valor in probas.items()}
+        probas_totales = sum(probas.values())
+        probas = {nodo: valor/probas_totales for nodo, valor in probas.items()}
 
         for _ in range(iteraciones):
             nuevo_pagerank = {}
@@ -102,35 +103,34 @@ class Recomendify:
 
         return pagerank
 
-    def recomendar_canciones(self, n, canciones):
+    def recomendar_canciones(self, n, canciones_iniciales):
         recomendaciones = {}
-        for cancion in canciones:
+        for cancion in canciones_iniciales:
             pagerank_perso = self.page_rank_personalizado(self.grafo_bipartito, cancion)
-            canciones = {
-                nodo: valor for nodo, valor in pagerank_perso.items() if self.es_cancion(nodo)
-            }
-            canciones_ordenadas = sorted(canciones, key=lambda x: x[1], reverse=True)
-            similares = [nodo for nodo, _ in canciones_ordenadas if nodo != cancion]
-            recomendaciones[cancion] = similares
-
-        resultado = []
+            filtrar_canciones = {}
+            for c, pr in pagerank_perso.items():
+                if self.es_cancion(c) and c != cancion:
+                    filtrar_canciones[c] = pr
+            
+            canciones_ordenadas = sorted(filtrar_canciones.items(), key=lambda x: x[1], reverse=True)
+            recomendaciones[cancion] = canciones_ordenadas
         
 
-            
+        # extraer las n canciones
 
 
     def recomendar_usuarios(self, n, canciones):
         recomendaciones = {}
         for cancion in canciones:
             pagerank_perso = self.page_rank_personalizado(self.grafo_bipartito, cancion)
-            usuarios = {
-                nodo: valor for nodo, valor in pagerank_perso.items() if not self.es_cancion(nodo)
-            }
-            usuarios_ordenados = sorted(usuarios, key=lambda x: x[1], reverse=True)
-            similares = [nodo for nodo, _ in usuarios_ordenados]
-            recomendaciones[cancion] = similares
+            filtrar_usuarios = {}
+            for c, pr in pagerank_perso.items():
+                if not self.es_cancion(c):
+                    filtrar_usuarios[c] = pr
+            usuarios_ordenados = sorted(filtrar_usuarios.items(), key=lambda x: x[1], reverse=True)
+            recomendaciones[cancion] = usuarios_ordenados
         
-        return recomendaciones
+        # extraer los n usarios
 
     def reconstruir_ciclo(padres, inicio, contador):
         v = inicio
@@ -149,7 +149,7 @@ class Recomendify:
         if len(ciclo) != n:
             return "No se encontro recorrido"
         
-        ciclo_unido = [f"{cancion} -->" for cancion in ciclo[:-1]] + [ciclo[-1]]
+        ciclo_unido = [f"{cancion - artista} -->" for (cancion, artista) in ciclo[:-1]] + [ciclo[-1]]
         return ciclo_unido
 
     def todas_en_rango(self, n, cancion):
