@@ -12,20 +12,20 @@ class Recomendify:
         self.diccionario = {} #dicionario con el nombre como clave y el valor es una tupla de cancion y playlist en la que aparece
 
     def cargar_diccionario(self, datos):
-        for nombre, cancion, playlist in datos:
-            if nombre not in self.diccionario:
-                self.diccionario[nombre] = []
-            self.diccionario[nombre].append((cancion, playlist))
+        for nombre_user, cancion, playlist in datos: #cancion es una tupla (nombre_cancion, artista)
+            if nombre_user not in self.diccionario:
+                self.diccionario[nombre_user] = []
+            self.diccionario[nombre_user].append((cancion, playlist))
 
     def cargar_grafo(self):
-        for (user_id, nombre), canciones in self.diccionario.items():
-            self.grafo_bipartito.agregar_vertice(nombre)
-            for cancion,_ in canciones:
+        for nombre_user, canciones in self.diccionario.items(): #canciones es una tupla (cancion, nombre_playlist)
+            self.grafo_bipartito.agregar_vertice(nombre_user)
+            for cancion, _ in canciones: #guardamos solo el nombre de la cancion y el artista
                 if cancion not in self.grafo_bipartito.obtener_vertices(self.grafo_bipartito):
                     self.grafo_bipartito.agregar_vertice(cancion)
-                self.grafo_bipartito.agregar_arista(user_id, cancion)
+                self.grafo_bipartito.agregar_arista(nombre_user, cancion)
 
-    def camino_minimo(self, cancion_origen, cancion_destino):
+    def camino_minimo(self, cancion_origen, cancion_destino): # tuplas (nombre_cancion, artista)
         padres, _ = camino_minimo_bfs(self.grafo_bipartito, cancion_origen)
 
         if cancion_destino not in padres:
@@ -193,12 +193,17 @@ def main():
         entradas.append(linea)
 
     for entrada in entradas:
-        datos = entrada.split()
+        datos = entrada.split(" ", 1)
         comando = datos[0]
-        if comando == "corto":
-            Recomendify.camino_minimo()
+        resto = datos[1]
+
+        if comando == "camino":
+            canciones = resto.split(">>>>")
+            primer_cancion = canciones[0].split(" - ", 1)
+            segunda_cancion = canciones[1].split(" - ", 1)
+            Recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
         elif comando == "mas_importantes":
-            canciones = Recomendify.mas_importantes(datos[1])
+            canciones = Recomendify.mas_importantes(resto)
         elif comando == "recomendacion":
             if datos[1] == "canciones":
                 canciones_rec = Recomendify.recomendar_canciones(datos[2], )
