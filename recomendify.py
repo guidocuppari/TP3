@@ -27,6 +27,10 @@ class Recomendify:
                 self.grafo_bipartito.agregar_arista(nombre_user, cancion)
 
     def camino_minimo(self, cancion_origen, cancion_destino): # tuplas (nombre_cancion, artista)
+        if cancion_origen not in self.grafo_bipartito.obtener_vertices():
+            return f"Error: {cancion_origen} no está en el grafo"
+        if cancion_destino not in self.grafo_bipartito.obtener_vertices():
+            return f"Error: {cancion_destino} no está en el grafo"
         padres, _ = camino_minimo_bfs(self.grafo_bipartito, cancion_origen)
 
         if cancion_destino not in padres:
@@ -66,7 +70,9 @@ class Recomendify:
                 suma = 0
                 for vecino in self.grafo_bipartito.adyacentes(nodo):
                     suma += pagerank[vecino] / self.grafo_bipartito.grado_salida(vecino)
-                nuevo_pagerank[nodo] = (1 - d) / n + d * suma
+                    primer_sumando = 1 - d
+                    primer_sumando /= n
+                nuevo_pagerank[nodo] = primer_sumando + (d * suma)
             pagerank = nuevo_pagerank
 
         return pagerank
@@ -150,7 +156,7 @@ class Recomendify:
 
     def todas_en_rango(self, n, cancion):
         en_rango = bfs_distancias(self.grafo_bipartito, cancion, n)
-        return len(en_rango)
+        return en_rango
 
 
 def main():
@@ -174,7 +180,10 @@ def main():
 
     recomendify = Recomendify()
     recomendify.cargar_diccionario(imp)
+    recomendify.cargar_grafo()
 
+    # for w in recomendify.grafo_bipartito.adyacentes("lucy05"):
+    #     print(w)
     entradas = []
     while True:
         linea = input()
@@ -188,7 +197,7 @@ def main():
         resto = datos[1]
 
         if comando == "camino":
-            canciones = resto.split(">>>>")
+            canciones = resto.split(" >>>> ")
             primer_cancion = canciones[0].split(" - ", 1)
             segunda_cancion = canciones[1].split(" - ", 1)
             camino = recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
@@ -207,10 +216,10 @@ def main():
                 actual = cancion.split(" - ", 1)
                 tuplas.append((actual[0], actual[1]))
             if tipo == "canciones":
-                canciones_rec = recomendify.recomendar_canciones(datos[2], cantidad, tuplas)
+                canciones_rec = recomendify.recomendar_canciones(cantidad, tuplas)
                 print(canciones_rec)
             else:
-                usuarios_rec = recomendify.recomendar_usuarios(datos[2], cantidad, tuplas)
+                usuarios_rec = recomendify.recomendar_usuarios(cantidad, tuplas)
                 print(usuarios_rec)
         elif comando == "ciclo":
             mas_datos = resto.split(" ", 1)
@@ -226,6 +235,7 @@ def main():
             cancion = mas_datos[1].split(" - ", 1)
             tupla = (cancion[0], cancion[1])
             rango = recomendify.todas_en_rango(saltos, tupla)
+            print(rango)
 
 
 if __name__ == "__main__":
