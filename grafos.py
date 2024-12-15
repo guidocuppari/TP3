@@ -11,7 +11,7 @@ class Grafo:
                 self.agregar_vertice(v)
 
     def agregar_vertice(self, v):
-        if not(v in self.vertices):
+        if not v in self.vertices:
             self.vertices[v] = {}
 
     def borrar_vertice(self, v):

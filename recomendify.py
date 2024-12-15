@@ -210,7 +210,7 @@ def main():
             tipo = info[0]
             cantidad = int(info[1])
             canciones = info[2]
-            divididas = canciones.split(">>>>")
+            divididas = canciones.split(" >>>> ")
             tuplas = []
             for cancion in divididas:
                 actual = cancion.split(" - ", 1)

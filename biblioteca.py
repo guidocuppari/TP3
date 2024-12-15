@@ -8,7 +8,7 @@ def camino_minimo_dijkstra(grafo, origen, destino):
     for v in grafo:
         distancia[v] = float('inf')
     distancia[origen] = 0
-    padres [origen] = None
+    padres[origen] = None
     q = Heap()
     q.encolar(0, origen)
     while not q.esta_vacia():
@@ -26,11 +26,11 @@ def camino_minimo_dijkstra(grafo, origen, destino):
 def camino_minimo_bfs(grafo, origen):
     distancia, padres, visitado = {}, {}, {}
     for v in grafo.obtener_vertices():
-        distancia[v] = float('inf')
+        distancia[v] = float("inf")
     distancia[origen] = 0
-    padres [origen] = None
-    visitado[origen] = False
-    q = Cola
+    padres[origen] = None
+    visitado[origen] = True
+    q = Cola()
     q.encolar(origen)
     while not q.esta_vacia():
         v = q.desencolar()
@@ -129,21 +129,21 @@ def dfs(grafo, origen):
 
 def bfs_distancias(grafo, origen, n):
     distancias = {}
-    lista = []
     q = Cola()
+    cantidad = 0
     q.encolar(origen)
     distancias[origen] = 0
 
     while not q.esta_vacia():
         v = q.desencolar()
-        if distancias[w] > n:
-            return lista
+        if distancias[v] > n:
+            return cantidad
         for w in grafo.adyacentes(v):
             if w not in distancias:
                 distancias[w] = distancias[v] + 1
                 q.encolar(w)
                 if distancias[w] == n:
-                    lista.append(w)
+                    cantidad += 1
 
 
 
