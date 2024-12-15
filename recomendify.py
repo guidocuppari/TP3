@@ -26,11 +26,16 @@ class Recomendify:
                     self.grafo_bipartito.agregar_vertice(cancion)
                 self.grafo_bipartito.agregar_arista(nombre_user, cancion)
 
-    def camino_minimo(self, cancion_origen, cancion_destino): # tuplas (nombre_cancion, artista)
+    def camino_minimo(self, cancion_origen, cancion_destino):
+        if cancion_origen not in self.grafo_bipartito.obtener_vertices():
+            return f"Error: {cancion_origen} no está en el grafo"
+        if cancion_destino not in self.grafo_bipartito.obtener_vertices():
+            return f"Error: {cancion_destino} no está en el grafo"
+
         padres, _ = camino_minimo_bfs(self.grafo_bipartito, cancion_origen)
 
         if cancion_destino not in padres:
-            return "No se encontro recorrido"
+            return "No se encontró recorrido"
 
         recorrido = []
         actual = cancion_destino
@@ -199,19 +204,23 @@ def main():
         elif comando == "recomendacion":
             info = resto.split(" ", 2)
             tipo = info[0]
-            cantidad = info[1]
+            cantidad = int(info[1])
             canciones = info[2]
             divididas = canciones.split(">>>>")
+
             tuplas = []
             for cancion in divididas:
                 actual = cancion.split(" - ", 1)
                 tuplas.append((actual[0], actual[1]))
+
             if tipo == "canciones":
-                canciones_rec = recomendify.recomendar_canciones(datos[2], cantidad, tuplas)
+                canciones_rec = recomendify.recomendar_canciones(cantidad, tuplas)
                 print(canciones_rec)
-            else:
-                usuarios_rec = recomendify.recomendar_usuarios(datos[2], cantidad, tuplas)
+            elif tipo == "usuarios":
+                usuarios_rec = recomendify.recomendar_usuarios(cantidad, tuplas)
                 print(usuarios_rec)
+
+
         elif comando == "ciclo":
             mas_datos = resto.split(" ", 1)
             largo = mas_datos[0]
