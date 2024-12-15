@@ -1,9 +1,10 @@
 from grafos import Grafo
 from heap import Heap
-from pila import PilaDinamica
+from collections import Counter
 from biblioteca import camino_minimo_bfs, dfs, bfs_distancias
 import argparse
 import os
+
 
 
 class Recomendify:
@@ -18,10 +19,10 @@ class Recomendify:
             self.diccionario[nombre_user].append((cancion, playlist))
 
     def cargar_grafo(self):
-        for nombre_user, canciones in self.diccionario.items(): #canciones es una tupla (cancion, nombre_playlist)
+        for nombre_user, canciones in self.diccionario.items():
             self.grafo_bipartito.agregar_vertice(nombre_user)
-            for (cancion, _) in canciones: #guardamos solo el nombre de la cancion y el artista
-                if cancion not in self.grafo_bipartito.obtener_vertices(self.grafo_bipartito):
+            for (cancion, _) in canciones:
+                if cancion not in self.grafo_bipartito.obtener_vertices():
                     self.grafo_bipartito.agregar_vertice(cancion)
                 self.grafo_bipartito.agregar_arista(nombre_user, cancion)
 
@@ -83,14 +84,14 @@ class Recomendify:
 
         return "; ".join(canciones_ordenadas[:n])
 
-    def page_rank_personalizado(self, cancion, d = 0.85, iteraciones = 100):
+    def page_rank_personalizado(self, cancion, d=0.85, iteraciones=100):
         nodos = self.grafo_bipartito.obtener_vertices()
         n = len(nodos)
         pagerank = {nodo: 1 / n for nodo in nodos}
 
         probas = {nodo: (1 if nodo == cancion else 0) for nodo in nodos}
-        probas_totales = sum(probas.values())
-        probas = {nodo: valor/probas_totales for nodo, valor in probas.items()}
+        total = sum(probas.values())
+        probas = {nodo: probas[nodo] / total for nodo in nodos}
 
         for _ in range(iteraciones):
             nuevo_pagerank = {}
@@ -104,18 +105,15 @@ class Recomendify:
         return pagerank
 
     def recomendar_canciones(self, n, canciones_iniciales):
-        pagerank_totales = {}
+        pagerank_totales = Counter()
         for cancion in canciones_iniciales:
-            pagerank_perso = self.page_rank_personalizado(self.grafo_bipartito, cancion)
-            filtrar_canciones = {}
+            pagerank_perso = self.page_rank_personalizado(cancion)
             for c, pr in pagerank_perso.items():
                 if self.es_cancion(c) and c != cancion:
-                    filtrar_canciones[c] = pr
-            
-            pagerank_totales.update(filtrar_canciones)
-        
-        canciones_ordenadas = sorted(pagerank_totales.items(), key=lambda x: x[1], reverse=True)
-        return "; ".join(canciones_ordenadas[:n])
+                    pagerank_totales[c] += pr
+
+        canciones_ordenadas = [c[0] for c in pagerank_totales.most_common(n)]
+        return "; ".join(canciones_ordenadas)
 
     def recomendar_usuarios(self, n, canciones):
         pagerank_totales = {}
@@ -130,33 +128,31 @@ class Recomendify:
         usuarios_ordenados = sorted(pagerank_totales.items(), key=lambda x: x[1], reverse=True)
         return "; ".join(usuarios_ordenados[:n])
 
-    def reconstruir_ciclo(padres, inicio, contador):
+    def reconstruir_ciclo(self, padres, inicio, contador):
         v = inicio
         camino = []
-        while contador > 0 or padres[v] != None:
-            contador -= 1
+        while contador > 0 and v is not None:
             camino.append(v)
             v = padres[v]
-        camino.append(v)
+            contador -= 1
+        camino.append(inicio)
         return camino
 
     def ciclo_n_canciones(self, n, cancion):
         padres, _ = dfs(self.grafo_bipartito, cancion)
-        cont = n
-        ciclo = self.reconstruir_ciclo(padres, cancion, cont)
-        if len(ciclo) != n:
-            return "No se encontro recorrido"
-        
-        ciclo_unido = []
-        for (cancion, artista) in ciclo:
-            ciclo_unido.append(f"{cancion} - {artista}")
+        ciclo = self.reconstruir_ciclo(padres, cancion, n)
 
+        if len(ciclo) != n + 1:
+            return "No se encontró ciclo con la longitud especificada"
+
+        ciclo_unido = [f"{cancion} - {artista}" for cancion, artista in ciclo]
         return " --> ".join(ciclo_unido)
 
     def todas_en_rango(self, n, cancion):
         en_rango = bfs_distancias(self.grafo_bipartito, cancion, n)
         return len(en_rango)
-        
+
+
 def main():
     param = argparse.ArgumentParser(None)
     param.add_argument("ruta", type=str)
@@ -164,6 +160,7 @@ def main():
 
     if not os.path.isfile(archivo.ruta):
         return "Error"
+
     imp = []
     with open(archivo.ruta, 'r') as arc:
         next(arc)
@@ -175,11 +172,8 @@ def main():
             nombre_playlist = info[5]
             imp.append((user, (nombre_cancion, artista), nombre_playlist))
 
-
-    for datos in imp:
-        Recomendify.cargar_diccionario(datos)
-    
-    Recomendify.cargar_grafo()
+    recomendify = Recomendify()
+    recomendify.cargar_diccionario(imp)
 
     entradas = []
     while True:
@@ -197,10 +191,10 @@ def main():
             canciones = resto.split(">>>>")
             primer_cancion = canciones[0].split(" - ", 1)
             segunda_cancion = canciones[1].split(" - ", 1)
-            camino = Recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
+            camino = recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
             print(camino)
         elif comando == "mas_importantes":
-            canciones = Recomendify.mas_importantes(resto)
+            canciones = recomendify.mas_importantes(resto)
             print(canciones)
         elif comando == "recomendacion":
             info = resto.split(" ", 2)
@@ -213,10 +207,10 @@ def main():
                 actual = cancion.split(" - ", 1)
                 tuplas.append((actual[0], actual[1]))
             if tipo == "canciones":
-                canciones_rec = Recomendify.recomendar_canciones(datos[2], cantidad, tuplas)
+                canciones_rec = recomendify.recomendar_canciones(datos[2], cantidad, tuplas)
                 print(canciones_rec)
             else:
-                usuarios_rec = Recomendify.recomendar_usuarios(datos[2], cantidad, tuplas)
+                usuarios_rec = recomendify.recomendar_usuarios(datos[2], cantidad, tuplas)
                 print(usuarios_rec)
         elif comando == "ciclo":
             mas_datos = resto.split(" ", 1)
@@ -224,17 +218,15 @@ def main():
             cancion = mas_datos[1].split(" - ", 1)
             tupla = []
             tupla.append((cancion[0], cancion[1]))
-            ciclo = Recomendify.ciclo_n_canciones(largo, tupla)
+            ciclo = recomendify.ciclo_n_canciones(largo, tupla)
             print(ciclo)
         else:
             mas_datos = resto.split(" ", 1)
-            saltos = mas_datos[0]
+            saltos = int(mas_datos[0])
             cancion = mas_datos[1].split(" - ", 1)
-            tupla = []
-            tupla.append((cancion[0], cancion[1]))
-            rango = Recomendify.todas_en_rango(saltos, tupla)
-            print(rango)
-        
+            tupla = (cancion[0], cancion[1])
+            rango = recomendify.todas_en_rango(saltos, tupla)
+
 
 if __name__ == "__main__":
     main()
