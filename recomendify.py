@@ -194,12 +194,12 @@ def main():
             camino = recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
             print(camino)
         elif comando == "mas_importantes":
-            canciones = recomendify.mas_importantes(resto)
+            canciones = recomendify.mas_importantes(int(resto))
             print(canciones)
         elif comando == "recomendacion":
             info = resto.split(" ", 2)
             tipo = info[0]
-            cantidad = info[1]
+            cantidad = int(info[1])
             canciones = info[2]
             divididas = canciones.split(">>>>")
             tuplas = []
@@ -214,7 +214,7 @@ def main():
                 print(usuarios_rec)
         elif comando == "ciclo":
             mas_datos = resto.split(" ", 1)
-            largo = mas_datos[0]
+            largo = int(mas_datos[0])
             cancion = mas_datos[1].split(" - ", 1)
             tupla = []
             tupla.append((cancion[0], cancion[1]))
