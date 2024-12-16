@@ -1,6 +1,4 @@
 from grafos import Grafo
-from heap import Heap
-from collections import Counter
 from biblioteca import camino_minimo_bfs, bfs_distancias, dfs_ciclo_n, random_walk_multiples
 import argparse
 import os
@@ -34,7 +32,7 @@ class Recomendify:
         padres, _ = camino_minimo_bfs(self.grafo_bipartito, cancion_origen)
 
         if cancion_destino not in padres:
-            return "No se encontró recorrido"
+            return "No se encontro recorrido"
 
         recorrido = []
         actual = cancion_destino
@@ -147,16 +145,13 @@ class Recomendify:
         
         raise ValueError("Tipo debe ser 'canciones' o 'usuarios'.")
 
-
-
-
 def main():
     param = argparse.ArgumentParser(None)
     param.add_argument("ruta", type=str)
     archivo = param.parse_args()
 
     if not os.path.isfile(archivo.ruta):
-        return "Error"
+        return "El archivo no existe"
 
     imp = []
     with open(archivo.ruta, 'r') as arc:
@@ -175,63 +170,60 @@ def main():
     recomendify.cargar_grafo_de_canciones()
     entradas = []
     while True:
-         linea = input()
-         if linea == "":
-             break
-         entradas.append(linea)
+        linea = input()
+        if linea == "":
+            break
+        entradas.append(linea)
 
     for entrada in entradas:
-         datos = entrada.split(" ", 1)
-         comando = datos[0]
-         resto = datos[1] if len(datos) > 1 else ""
-         if comando == "camino":
-             canciones = resto.split(" >>>> ")
-             if len(canciones) < 2:
-                 print("Error: formato de camino incorrecto.")
-                 continue
-             primer_cancion = canciones[0].split(" - ", 1)
-             segunda_cancion = canciones[1].split(" - ", 1)
-             camino = recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
-             print(camino)
-         elif comando == "mas_importantes":
-             resto = int(resto)
-             canciones = recomendify.mas_importantes(resto)
-             print(canciones)
-         elif comando == "recomendacion":
-             info = resto.split(" ", 2)
-             tipo = info[0]
-             cantidad = int(info[1]) if len(info) > 1 else 0
-             canciones = info[2] if len(info) > 2 else ""
-             divididas = canciones.split(" >>>> ")
-
-             canciones = []
-             for cancion in divididas:
-                 actual = cancion.split(" - ", 1)
-                 canciones.append((actual[0], actual[1]))
-             recomendaciones = recomendify.recomendar(recomendify.grafo_bipartito, tipo, cantidad, canciones, 50, 5000)
-             print(recomendaciones)
-
-         elif comando == "ciclo":
-             mas_datos = resto.split(" ", 1)
-             if len(mas_datos) < 2:
-                 print("Error: formato de ciclo incorrecto.")
-                 continue
-             largo = int(mas_datos[0])
-             cancion = mas_datos[1].split(" - ", 1)
-             inicio = (cancion[0], cancion[1])
-             ciclo = recomendify.buscar_ciclo_n(inicio, largo)
-             print(ciclo)
-         else:
-             mas_datos = resto.split(" ", 1)
-             if len(mas_datos) < 2:
-                 print("Error: formato de salto incorrecto.")
-                 continue
-             saltos = int(mas_datos[0]) if mas_datos[0] else 0
-             cancion = mas_datos[1].split(" - ", 1)
-             tupla = (cancion[0], cancion[1])
-             rango = recomendify.rango(saltos, tupla)
-             print(rango)
-
+        datos = entrada.split(" ", 1)
+        comando = datos[0]
+        resto = datos[1] if len(datos) > 1 else ""
+        if comando == "camino":
+            canciones = resto.split(" >>>> ")
+            if len(canciones) < 2:
+                print("Error: formato de camino incorrecto.")
+                continue
+            primer_cancion = canciones[0].split(" - ", 1)
+            segunda_cancion = canciones[1].split(" - ", 1)
+            camino = recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
+            print(camino)
+        elif comando == "mas_importantes":
+            resto = int(resto)
+            canciones = recomendify.mas_importantes(resto)
+            print(canciones)
+        elif comando == "recomendacion":
+            info = resto.split(" ", 2)
+            tipo = info[0]
+            cantidad = int(info[1]) if len(info) > 1 else 0
+            canciones = info[2] if len(info) > 2 else ""
+            divididas = canciones.split(" >>>> ")
+            canciones = []
+            for cancion in divididas:
+                actual = cancion.split(" - ", 1)
+                canciones.append((actual[0], actual[1]))
+            recomendaciones = recomendify.recomendar(recomendify.grafo_bipartito, tipo, cantidad, canciones, 50, 5000)
+            print(recomendaciones)
+        elif comando == "ciclo":
+            mas_datos = resto.split(" ", 1)
+            if len(mas_datos) < 2:
+                print("Error: formato de ciclo incorrecto.")
+                continue
+            largo = int(mas_datos[0])
+            cancion = mas_datos[1].split(" - ", 1)
+            inicio = (cancion[0], cancion[1])
+            ciclo = recomendify.buscar_ciclo_n(inicio, largo)
+            print(ciclo)
+        else:
+            mas_datos = resto.split(" ", 1)
+            if len(mas_datos) < 2:
+                print("Error: formato de salto incorrecto.")
+                continue
+            saltos = int(mas_datos[0]) if mas_datos[0] else 0
+            cancion = mas_datos[1].split(" - ", 1)
+            tupla = (cancion[0], cancion[1])
+            rango = recomendify.rango(saltos, tupla)
+            print(rango)
 
 if __name__ == "__main__":
     main()
