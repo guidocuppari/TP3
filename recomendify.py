@@ -103,8 +103,8 @@ class Recomendify:
         return isinstance(nodo, tuple) and len(nodo) == 2
 
     def cargar_grafo_de_canciones(self):
-        for usuario, canciones in self.diccionario.items():
-            canciones_usuario = set(cancion for cancion, _ in canciones)
+        for _, canciones in self.diccionario.items():
+            canciones_usuario = set(cancion for (cancion, _) in canciones)
             canciones_usuario = list(canciones_usuario)
 
             for i in range(len(canciones_usuario)):
@@ -116,13 +116,13 @@ class Recomendify:
             return 0
 
         canciones_a_n_saltos = bfs_distancias(self.grafo_canciones, cancion_inicio, n)
-
         return len(canciones_a_n_saltos)
 
     def buscar_ciclo_n(self, inicio, largo):
         visitados = [inicio]
         camino = [inicio]
-        return dfs_ciclo_n(self.grafo_canciones, inicio, visitados, camino, largo)
+        resultado = dfs_ciclo_n(self.grafo_canciones, inicio, visitados, camino, largo)
+        return " --> ".join(f"{cancion[0]} - {cancion[1]}" for cancion in resultado)
 
     def recomendar(self, grafo, tipo, cantidad, canciones, largo=100, iteraciones=500):
         nodos_iniciales = [cancion for cancion in canciones]
