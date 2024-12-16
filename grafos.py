@@ -1,76 +1,77 @@
 import random
 
 class Grafo:
-    def __init__(self, es_dirigido, vertices = None):
-        self.es_dirigido = es_dirigido
-        self.vertices = {}
-        if vertices is None:
-            return
-        else:
-            for v in vertices:
-                self.agregar_vertice(v)
+    def __init__(self, es_dirigido=False, vertices_init=[]):
+        # Indica si el grafo es dirigido o no
+        self.dirigido = es_dirigido
+        # Diccionario para almacenar los vértices y sus adyacencias (con pesos de arista)
+        self.adyacentes = {v: {} for v in vertices_init}
 
     def agregar_vertice(self, v):
-        if not v in self.vertices:
-            self.vertices[v] = {}
+        # Agrega un nuevo vértice al grafo si no existe
+        if v not in self.adyacentes:
+            self.adyacentes[v] = {}
 
     def borrar_vertice(self, v):
-        if v not in self.vertices:
-            raise AssertionError("El vertice no pertenece al grafo")
-        if v in self.vertices:
-            self.vertices.pop(v)
-        for _, dato in self.vertices:
-            if v in dato:
-                dato.pop(v)
+        # Elimina el vértice y sus aristas
+        if v in self.adyacentes:
+            # Elimina todas las aristas que apuntan al vértice en otros vértices
+            for w in list(self.adyacentes[v].keys()):
+                self.borrar_arista(v, w)
+            del self.adyacentes[v]
 
-    def agregar_arista(self, v, w, peso = 1):
-        if v not in self.vertices and w in self.vertices:
-            raise AssertionError("Algun vertice no pertenece al grafo")
-        dato_v = self.vertices[v]
-        dato_v[w] = peso
-        if not self.es_dirigido:
-            dato_w = self.vertices[w]
-            dato_w[w] = peso
+    def agregar_arista(self, v, w, peso=1):
+        # Asegurarse de que ambos vértices existan
+        self.agregar_vertice(v)
+        self.agregar_vertice(w)
+        # Agrega arista con el peso indicado
+        self.adyacentes[v][w] = peso
+        if not self.dirigido:
+            self.adyacentes[w][v] = peso
+
     def borrar_arista(self, v, w):
-        if v not in self.vertices and w in self.vertices:
-            raise AssertionError("Algun vertice no pertenece al grafo")
+        # Elimina la arista de v a w (y de w a v si es no dirigido)
+        if v in self.adyacentes and w in self.adyacentes[v]:
+            del self.adyacentes[v][w]
+        if not self.dirigido and w in self.adyacentes and v in self.adyacentes[w]:
+            del self.adyacentes[w][v]
 
-        self.vertices[v].pop(w)
-        if not self.es_dirigido:
-            self.vertices[w].pop(v)
-    def estan_unidos (self, v, w):
-        if v not in self.vertices and w in self.vertices:
-            raise AssertionError("Algun vertice no pertenece al grafo")
-        if v in self.vertices[w]:
-            return True
-        else:
-            return False
+    def estan_unidos(self, v, w):
+        # Verifica si hay una arista entre v y w
+        return v in self.adyacentes and w in self.adyacentes[v]
 
     def peso_arista(self, v, w):
-        if v not in self.vertices and w in self.vertices:
-            raise AssertionError("Algun vertice no pertenece al grafo")
-        dato_v = self.vertices[v]
-        return float(dato_v[w])
+        # Devuelve el peso de la arista entre v y w si existe
+        if self.estan_unidos(v, w):
+            return self.adyacentes[v][w]
+        return None
 
     def obtener_vertices(self):
-        vertices = []
-        for v in self.vertices:
-            vertices.append(v)
-        return vertices
-
-    def adyacentes(self, v):
-        if v not in self.vertices:
-            raise AssertionError("El vertice no pertenece al grafo")
-        vertices_adyacentes = []
-        for w in self.vertices[v]:
-            vertices_adyacentes.append(w)
-        return vertices_adyacentes
+        # Devuelve una lista con todos los vértices del grafo
+        return list(self.adyacentes.keys())
 
     def vertice_aleatorio(self):
-        if len(self.vertices) == 0:
-            raise AssertionError("El grafo no tiene vertices")
-        vertices = self.obtener_vertices()
-        return vertices[random.randint(0, len(self.vertices))]
+        # Devuelve un vértice aleatorio del grafo
+        if not self.adyacentes:
+            return None
+        return random.choice(list(self.adyacentes.keys()))
 
-    def grado_salida(self, vertice):
-        return len(self.adyacentes(vertice))
+    def obtener_adyacentes(self, v):
+        # Devuelve los adyacentes al vértice v (como lista)
+        if v in self.adyacentes:
+            return list(self.adyacentes[v].keys())
+        return []
+
+    def _str_(self):
+        # Representación en cadena del grafo
+        resultado = []
+        for v, ady in self.adyacentes.items():
+            for w, peso in ady.items():
+                if self.dirigido or (v <= w):  # Evita duplicados si el grafo no es dirigido
+                    resultado.append(f"{v} <--> {w} (peso: {peso})")
+        return "\n".join(resultado)
+
+    def grado_salida(self, v):
+        if v not in self.adyacentes:
+            raise ValueError(f"El vértice '{v}' no existe en el grafo.")
+        return len(self.adyacentes[v])
