@@ -1,7 +1,7 @@
 from grafos import Grafo
 from heap import Heap
 from collections import Counter
-from biblioteca import camino_minimo_bfs, dfs, bfs_distancias, dfs_rec
+from biblioteca import camino_minimo_bfs, bfs_distancias, dfs_ciclo_n
 import argparse
 import os
 
@@ -61,94 +61,52 @@ class Recomendify:
 
         return " --> ".join(resultado)
 
-    def proyeccion_canciones(self):
-        # Crear una proyección en canciones
-        proyeccion = Grafo()
-        canciones = [v for v in self.grafo_bipartito.obtener_vertices() if self.es_cancion(v)]
+    def pagerank(self, grafo, d=0.85, iteraciones=100, tolerancia=1e-6):
 
-        for i, cancion1 in enumerate(canciones):
-            for cancion2 in canciones[i + 1:]:
-                usuarios_c1 = set(self.grafo_bipartito.adyacentes(cancion1))
-                usuarios_c2 = set(self.grafo_bipartito.adyacentes(cancion2))
-                peso = len(usuarios_c1 & usuarios_c2)
-                if peso > 0:
-                    proyeccion.agregar_vertice(cancion1)
-                    proyeccion.agregar_vertice(cancion2)
-                    proyeccion.agregar_arista(cancion1, cancion2, peso=peso)
+        vertices = grafo.obtener_vertices()
+        N = len(vertices)  # Número total de vértices
+        if N == 0:
+            return {}
 
-        return proyeccion
-
-    def es_cancion(self, vertice):
-        return isinstance(vertice, tuple) and len(vertice) == 2
-
-    def pagerank(self, proyeccion, d=0.85, tol=1e-6, max_iter=100):
-        vertices = proyeccion.obtener_vertices()
-        n = len(vertices)
-        pr = {v: 1 / n for v in vertices}
-
-        for _ in range(max_iter):
-            nuevo_pr = {}
-            for v in vertices:
-                suma = 0
-                for u in proyeccion.adyacentes(v):
-                    suma += pr[u] / len(proyeccion.adyacentes(u))
-                nuevo_pr[v] = (1 - d) / n + d * suma
-
-            if max(abs(nuevo_pr[v] - pr[v]) for v in vertices) < tol:
-                break
-
-            pr = nuevo_pr
-
-        return sorted(pr.items(), key=lambda x: x[1], reverse=True)  # Ordenar por importancia
-
-    def mas_importantes(self, n):
-        proyeccion = self.proyeccion_canciones()  # Proyectar en canciones
-        pr_resultado = self.pagerank(proyeccion)  # Calcular PageRank
-        return [cancion for cancion, _ in pr_resultado[:n]]  # Devolver las n más importantes
-
-    def page_rank_personalizado(self, cancion, d=0.85, iteraciones=100):
-        nodos = self.grafo_bipartito.obtener_vertices()
-        n = len(nodos)
-        pagerank = {nodo: 1 / n for nodo in nodos}
-
-        probas = {nodo: (1 if nodo == cancion else 0) for nodo in nodos}
-        total = sum(probas.values())
-        probas = {nodo: probas[nodo] / total for nodo in nodos}
+        pagerank_actual = {v: 1 / N for v in vertices}
 
         for _ in range(iteraciones):
-            nuevo_pagerank = {}
-            for nodo in nodos:
-                suma = 0
-                for vecino in self.grafo_bipartito.obtener_adyacentes(nodo):
-                    suma += pagerank[vecino] / self.grafo_bipartito.grado_salida(vecino)
-                nuevo_pagerank[nodo] = (1 - d) * probas[nodo] + d * suma
-            pagerank = nuevo_pagerank
+            pagerank_nuevo = {v: (1 - d) / N for v in vertices}
 
-        return pagerank
+            for v in vertices:
+                for u in grafo.obtener_adyacentes(v):  # u -> v (aristas entrantes a v)
+                    pagerank_nuevo[v] += d * pagerank_actual[u] / grafo.grado_salida(u)
 
-    def recomendar_canciones(self, n, canciones_iniciales):
-        pagerank_totales = Counter()
-        for cancion in canciones_iniciales:
-            pagerank_perso = self.page_rank_personalizado(cancion)
-            for c, pr in pagerank_perso.items():
-                if self.es_cancion(c) and c != cancion:
-                    pagerank_totales[c] += pr
+            suma_total = sum(pagerank_nuevo.values())
+            pagerank_nuevo = {v: pr / suma_total for v, pr in pagerank_nuevo.items()}
 
-        canciones_ordenadas = [c[0] for c in pagerank_totales.most_common(n)]
-        return canciones_ordenadas
+            cambio_total = sum(abs(pagerank_nuevo[v] - pagerank_actual[v]) for v in vertices)
+            pagerank_actual = pagerank_nuevo
+            if cambio_total < tolerancia:
+                break
 
-    def recomendar_usuarios(self, n, canciones):
-        pagerank_totales = {}
-        for cancion in canciones:
-            pagerank_perso = self.page_rank_personalizado(self.grafo_bipartito, cancion)
-            filtrar_usuarios = {}
-            for c, pr in pagerank_perso.items():
-                if not self.es_cancion(c):
-                    filtrar_usuarios[c] = pr
-            pagerank_totales.update(filtrar_usuarios)
-        
-        usuarios_ordenados = sorted(pagerank_totales.items(), key=lambda x: x[1], reverse=True)
-        return "; ".join(usuarios_ordenados[:n])
+        return pagerank_actual
+
+    def mas_importantes(self, n):
+        pagerank = self.pagerank(self.grafo_bipartito)
+
+        canciones = {nodo: pagerank[nodo] for nodo in pagerank if self.es_cancion(nodo)}
+        print(canciones)
+        canciones_importantes = sorted(canciones.items(), key=lambda item: item[1], reverse=True)
+        top_canciones = canciones_importantes[:n]
+        return "; ".join(f"{cancion}" for cancion, _ in top_canciones)
+
+    def es_cancion(self, nodo):
+        return isinstance(nodo, tuple) and len(nodo) == 2
+
+    def obtener_canciones(self):
+        canciones = set()
+        for usuario, canciones_usuario in self.diccionario.items():
+            if isinstance(canciones_usuario, (set, list)):
+                canciones.update(canciones_usuario)
+        return canciones
+
+
 
     def cargar_grafo_de_canciones(self):
         for usuario, canciones in self.diccionario.items():
@@ -167,26 +125,13 @@ class Recomendify:
 
         return len(canciones_a_n_saltos)
 
-    def buscar_ciclo(grafo, origen, n):
-        visitados = set()
-        camino = []
-        padres = {}
-        orden = {}
-        padres[origen] = None
-        orden[origen] = 0
+    def buscar_ciclo_n(self, inicio, largo):
+        visitados = [inicio]
+        camino = [inicio]
+        return dfs_ciclo_n(self.grafo_canciones, inicio, visitados, camino, largo)
 
-        ciclo = dfs_rec(grafo, origen, visitados, padres, orden, camino, n)
 
-        if ciclo:
-            return ciclo
-        else:
-            return "No se encontro recorrido"
 
-    def ciclo_n_canciones(self, largo, cancion):
-        if cancion not in self.grafo_canciones.obtener_vertices():
-            return "No se encontro recorrido"
-
-        return self.buscar_ciclo(cancion, largo)
 
 def main():
     param = argparse.ArgumentParser(None)
@@ -211,7 +156,6 @@ def main():
     recomendify.cargar_diccionario(imp)
     recomendify.cargar_grafo()
     recomendify.cargar_grafo_de_canciones()
-
     entradas = []
     while True:
          linea = input()
@@ -260,11 +204,10 @@ def main():
              if len(mas_datos) < 2:
                  print("Error: formato de ciclo incorrecto.")
                  continue
-             largo = mas_datos[0]
+             largo = int(mas_datos[0])
              cancion = mas_datos[1].split(" - ", 1)
-             tupla = []
-             tupla.append((cancion[0], cancion[1]))
-             ciclo = recomendify.ciclo_n_canciones(largo, tupla)
+             inicio = (cancion[0], cancion[1])
+             ciclo = recomendify.buscar_ciclo_n(inicio, largo)
              print(ciclo)
          else:
              mas_datos = resto.split(" ", 1)
