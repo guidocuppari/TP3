@@ -116,29 +116,22 @@ def topologico_entrada(grafo):
                 q.encolar(w)
     return resultado
 
+def dfs_ciclo_n(grafo, actual, visitados, camino, largo):
+    inicio = camino[0]
 
-def reconstruir_ciclo(padre, inicio, fin):
-    v = fin
-    camino = []
-    while v != inicio:
-        camino.append(v)
-        v = padre[v]
-    camino.append(inicio)
+    if len(visitados) == largo and inicio == visitados[0]:
+        camino.append(inicio)
+        return camino
 
-    return camino[::-1]
-
-def dfs_ciclo(grafo, v, visitados, padre):
-    visitados.add(v)
-    for w in grafo.adyacentes[v]:
-        if w in visitados:
-            if w != padre[v]:
-                return reconstruir_ciclo(padre, w, v)
-        else:
-            padre[w] = v
-            ciclo = dfs_ciclo(grafo, w, visitados, padre)
-            if ciclo is not None:
-                return ciclo
-
+    for vecino in grafo.obtener_adyacentes(actual):
+        if vecino not in visitados:
+            visitados.append(vecino)
+            camino.append(vecino)
+            resultado = dfs_ciclo_n(grafo, vecino, visitados, camino, largo)
+            if resultado:
+                return resultado
+            visitados.pop()
+            camino.pop()
     return None
 
 def bfs_distancias(grafo, origen, n):
