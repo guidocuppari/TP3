@@ -5,8 +5,6 @@ from biblioteca import camino_minimo_bfs, bfs_distancias, dfs_ciclo_n, random_wa
 import argparse
 import os
 
-
-
 class Recomendify:
     def __init__(self):
         self.grafo_bipartito = Grafo()
@@ -69,7 +67,6 @@ class Recomendify:
         return " --> ".join(resultado)
 
     def pagerank(self, grafo, d=0.85, iteraciones=100, tolerancia=1e-6):
-
         vertices = grafo.obtener_vertices()
         N = len(vertices)  # Número total de vértices
         if N == 0:
@@ -100,7 +97,7 @@ class Recomendify:
         canciones = {nodo: pagerank[nodo] for nodo in pagerank if self.es_cancion(nodo)}
         canciones_importantes = sorted(canciones.items(), key=lambda item: item[1], reverse=True)
         top_canciones = canciones_importantes[:n]
-        return "; ".join(f"{cancion}" for cancion, _ in top_canciones)
+        return "; ".join(f"{cancion[0]} - {cancion[1]}" for cancion, _ in top_canciones)
 
     def es_cancion(self, nodo):
         return isinstance(nodo, tuple) and len(nodo) == 2
