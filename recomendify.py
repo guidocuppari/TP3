@@ -30,6 +30,25 @@ class Recomendify:
                     self.grafo_bipartito.agregar_vertice(cancion)
                 self.grafo_bipartito.agregar_arista(nombre_user, cancion)
 
+    def armar_resultado_camino(self, recorrido, usuarios, canciones, resultado):
+        for i in range(len(recorrido) - 1):
+            origen = recorrido[i]
+            destino = recorrido[i + 1]
+            if origen in self.diccionario:
+                canciones.add(destino)
+                playlist = next((p for c, p in self.diccionario[origen] if c == destino), None)
+                if origen in usuarios:
+                    resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[0]} - {destino[1]}")
+                    continue
+                resultado.append(f"{destino[0]} - {destino[1]} --> aparece en playlist --> {playlist} --> de --> {origen}")
+            elif destino in self.diccionario:
+                usuarios.add(destino)
+                playlist = next((p for c, p in self.diccionario[destino] if c == origen), None)
+                if origen in canciones:
+                    resultado.append(f"aparece en playlist --> {playlist} --> de --> {destino}")
+                    continue
+                resultado.append(f"{origen[0]} - {origen[1]} --> aparece en playlist --> {playlist} --> de --> {destino}")
+
     def camino_minimo(self, cancion_origen, cancion_destino):
         if cancion_origen not in self.grafo_bipartito.obtener_vertices():
             return f"Error: {cancion_origen} no está en el grafo"
@@ -50,24 +69,7 @@ class Recomendify:
         resultado = []
         usuarios_visitados = set()
         canciones_visitadas = set()
-        for i in range(len(recorrido) - 1):
-            origen = recorrido[i]
-            destino = recorrido[i + 1]
-            if origen in self.diccionario:
-                canciones_visitadas.add(destino)
-                playlist = next((p for c, p in self.diccionario[origen] if c == destino), None)
-                if origen in usuarios_visitados:
-                    resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[0]} - {destino[1]}")
-                    continue
-                resultado.append(f"{destino[0]} - {destino[1]} --> aparece en playlist --> {playlist} --> de --> {origen}")
-            elif destino in self.diccionario:
-                usuarios_visitados.add(destino)
-                playlist = next((p for c, p in self.diccionario[destino] if c == origen), None)
-                if origen in canciones_visitadas:
-                    resultado.append(f"aparece en playlist --> {playlist} --> de --> {destino}")
-                    continue
-                resultado.append(f"{origen[0]} - {origen[1]} --> aparece en playlist --> {playlist} --> de --> {destino}")
-
+        self.armar_resultado_camino(recorrido, usuarios_visitados, canciones_visitadas, resultado)
         return " --> ".join(resultado)
 
     def pagerank(self, grafo, d=0.85, iteraciones=100, tolerancia=1e-6):
@@ -148,6 +150,43 @@ class Recomendify:
         
         raise ValueError("Tipo debe ser 'canciones' o 'usuarios'.")
 
+def leer_entrada(entradas):
+    while True:
+        linea = input()
+        if linea == "":
+            break
+        entradas.append(linea)
+
+def cargar_estructuras(recomendify, datos):
+    recomendify.cargar_diccionario(datos)
+    recomendify.cargar_grafo()
+    recomendify.cargar_grafo_de_canciones()
+
+def leer_archivo(ruta, datos):
+    with open(ruta, 'r') as arc:
+        next(arc)
+        for linea in arc:
+            info = linea.strip().split("\t")
+            user = info[1]
+            nombre_cancion = info[2]
+            artista = info[3]
+            nombre_playlist = info[5]
+            datos.append((user, (nombre_cancion, artista), nombre_playlist))
+
+def separar_datos(info):
+    mas_datos = info.split(" ", 1)
+    if len(mas_datos) < 2:
+        return None, None
+    largo = int(mas_datos[0])
+    cancion = mas_datos[1].split(" - ", 1)
+    inicio = (cancion[0], cancion[1])
+    return largo, inicio
+
+def guardar_canciones(divididas, canciones):
+    for cancion in divididas:
+        actual = cancion.split(" - ", 1)
+        canciones.append((actual[0], actual[1]))
+
 def main():
     param = argparse.ArgumentParser(None)
     param.add_argument("ruta", type=str)
@@ -157,26 +196,11 @@ def main():
         return "El archivo no existe"
 
     imp = []
-    with open(archivo.ruta, 'r') as arc:
-        next(arc)
-        for linea in arc:
-            info = linea.strip().split("\t")
-            user = info[1]
-            nombre_cancion = info[2]
-            artista = info[3]
-            nombre_playlist = info[5]
-            imp.append((user, (nombre_cancion, artista), nombre_playlist))
-
+    leer_archivo(archivo.ruta, imp)
     recomendify = Recomendify()
-    recomendify.cargar_diccionario(imp)
-    recomendify.cargar_grafo()
-    recomendify.cargar_grafo_de_canciones()
+    cargar_estructuras(recomendify, imp)
     entradas = []
-    while True:
-        linea = input()
-        if linea == "":
-            break
-        entradas.append(linea)
+    leer_entrada(entradas)
 
     for entrada in entradas:
         datos = entrada.split(" ", 1)
@@ -202,29 +226,21 @@ def main():
             canciones = info[2] if len(info) > 2 else ""
             divididas = canciones.split(" >>>> ")
             canciones = []
-            for cancion in divididas:
-                actual = cancion.split(" - ", 1)
-                canciones.append((actual[0], actual[1]))
+            guardar_canciones(divididas, canciones)
             recomendaciones = recomendify.recomendar(recomendify.grafo_bipartito, tipo, cantidad, canciones, 50, 5000)
             print(recomendaciones)
         elif comando == CICLO:
-            mas_datos = resto.split(" ", 1)
-            if len(mas_datos) < 2:
+            largo, inicio = separar_datos(resto)
+            if largo is None:
                 print("Error: formato de ciclo incorrecto.")
                 continue
-            largo = int(mas_datos[0])
-            cancion = mas_datos[1].split(" - ", 1)
-            inicio = (cancion[0], cancion[1])
             ciclo = recomendify.buscar_ciclo_n(inicio, largo)
             print(ciclo)
         else:
-            mas_datos = resto.split(" ", 1)
-            if len(mas_datos) < 2:
+            saltos, tupla = separar_datos(resto)
+            if saltos is None:
                 print("Error: formato de salto incorrecto.")
                 continue
-            saltos = int(mas_datos[0]) if mas_datos[0] else 0
-            cancion = mas_datos[1].split(" - ", 1)
-            tupla = (cancion[0], cancion[1])
             rango = recomendify.rango(saltos, tupla)
             print(rango)
 
