@@ -127,24 +127,26 @@ class Recomendify:
     def recomendar(self, grafo, tipo, cantidad, canciones, largo=100, iteraciones=500):
         nodos_iniciales = [cancion for cancion in canciones]
         visitas_acumuladas = random_walk_multiples(grafo, nodos_iniciales, largo, iteraciones)
-
+        recs_ordenadas = []
         if tipo == "canciones":
             recomendaciones = {
                 nodo: valor
                 for nodo, valor in visitas_acumuladas.items()
                 if isinstance(nodo, tuple) and nodo not in canciones
             }
+            recs_ordenadas = sorted(recomendaciones.items(), key=lambda x: x[1], reverse=True)
+            return "; ".join(f"{cancion[0]} - {cancion[1]}" for cancion, _ in recs_ordenadas[:cantidad])
         elif tipo == "usuarios":
             recomendaciones = {
                 nodo: valor
                 for nodo, valor in visitas_acumuladas.items()
                 if isinstance(nodo, str) and nodo not in nodos_iniciales
             }
-        else:
-            raise ValueError("Tipo debe ser 'canciones' o 'usuarios'.")
+            recs_ordenadas = sorted(recomendaciones.items(), key=lambda x: x[1], reverse=True)
+            return "; ".join(f"{usuario}" for usuario, _ in recs_ordenadas[:cantidad])
+        
+        raise ValueError("Tipo debe ser 'canciones' o 'usuarios'.")
 
-        recomendaciones_ordenadas = sorted(recomendaciones.items(), key=lambda x: x[1], reverse=True)
-        return [nodo for nodo, _ in recomendaciones_ordenadas[:cantidad]]
 
 
 
