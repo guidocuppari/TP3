@@ -213,6 +213,9 @@ def main():
                 continue
             primer_cancion = canciones[0].split(" - ", 1)
             segunda_cancion = canciones[1].split(" - ", 1)
+            if len(primer_cancion) < 2 or len(segunda_cancion) < 2:
+                print("Tanto el origen como el destino deben ser canciones")
+                continue
             camino = recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
             print(camino)
         elif comando == IMPORTANTES:
