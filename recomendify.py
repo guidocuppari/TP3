@@ -1,7 +1,7 @@
 from grafos import Grafo
 from heap import Heap
 from collections import Counter
-from biblioteca import camino_minimo_bfs, dfs, bfs_distancias, dfs_rec
+from biblioteca import camino_minimo_bfs, bfs_distancias, dfs_ciclo
 import argparse
 import os
 
@@ -158,8 +158,17 @@ class Recomendify:
         return "; ".join(usuarios_ordenados[:n])
 
     def cargar_grafo_de_canciones(self):
-        for usuario, canciones in self.diccionario.items():
-            canciones_usuario = set(cancion for cancion, _ in canciones)
+        visitadas = set()
+
+        for _, canciones in self.diccionario.items():
+            for (cancion, _) in canciones:
+                if cancion not in visitadas:
+                    self.grafo_canciones.agregar_vertice(cancion)
+                    visitadas.add(cancion)
+        
+
+        for _, canciones in self.diccionario.items():
+            canciones_usuario = set(cancion for (cancion, _) in canciones)
             canciones_usuario = list(canciones_usuario)
 
             for i in range(len(canciones_usuario)):
@@ -174,26 +183,14 @@ class Recomendify:
 
         return len(canciones_a_n_saltos)
 
-    def buscar_ciclo(grafo, origen, n):
-        visitados = set()
-        camino = []
-        padres = {}
-        orden = {}
-        padres[origen] = None
-        orden[origen] = 0
-
-        ciclo = dfs_rec(grafo, origen, visitados, padres, orden, camino, n)
-
-        if ciclo:
-            return ciclo
-        else:
-            return "No se encontro recorrido"
 
     def ciclo_n_canciones(self, largo, cancion):
         if cancion not in self.grafo_canciones.obtener_vertices():
             return "No se encontro recorrido"
 
-        return self.buscar_ciclo(cancion, largo)
+        ciclo = dfs_ciclo(self.grafo_canciones, cancion, set(), {})
+        return ciclo
+        
 
 def main():
     param = argparse.ArgumentParser(None)
@@ -219,6 +216,13 @@ def main():
     recomendify.cargar_grafo()
     recomendify.cargar_grafo_de_canciones()
 
+    # for w in recomendify.grafo_canciones.obtener_vertices():
+    #     print(w)
+    # for w in recomendify.grafo_canciones.adyacentes[('By The Way', 'Red Hot Chili Peppers')]:
+    #     print(w)
+
+    # if ('By The Way', 'Red Hot Chili Peppers') in recomendify.grafo_canciones.obtener_vertices():
+    #     print("True")
     entradas = []
     while True:
         linea = input()
@@ -273,9 +277,7 @@ def main():
                 continue
             largo = mas_datos[0]
             cancion = mas_datos[1].split(" - ", 1)
-            tupla = []
-            tupla.append((cancion[0], cancion[1]))
-            ciclo = recomendify.ciclo_n_canciones(largo, tupla)
+            ciclo = recomendify.ciclo_n_canciones(largo, (cancion[0], cancion[1]))
             print(ciclo)
         else:
             mas_datos = resto.split(" ", 1)
