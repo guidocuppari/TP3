@@ -3,6 +3,13 @@ from biblioteca import camino_minimo_bfs, bfs_distancias, dfs_ciclo_n, random_wa
 import argparse
 import os
 
+CANCIONES = "canciones"
+USUARIOS = "usuarios"
+CAMINO = "camino"
+IMPORTANTES = "mas_importantes"
+RECOMENDACION = "recomendacion"
+CICLO = "ciclo"
+
 class Recomendify:
     def __init__(self):
         self.grafo_bipartito = Grafo()
@@ -30,7 +37,6 @@ class Recomendify:
             return f"Error: {cancion_destino} no está en el grafo"
 
         padres, _ = camino_minimo_bfs(self.grafo_bipartito, cancion_origen)
-
         if cancion_destino not in padres:
             return "No se encontro recorrido"
 
@@ -71,17 +77,14 @@ class Recomendify:
             return {}
 
         pagerank_actual = {v: 1 / N for v in vertices}
-
         for _ in range(iteraciones):
             pagerank_nuevo = {v: (1 - d) / N for v in vertices}
-
             for v in vertices:
                 for u in grafo.obtener_adyacentes(v):  # u -> v (aristas entrantes a v)
                     pagerank_nuevo[v] += d * pagerank_actual[u] / grafo.grado_salida(u)
 
             suma_total = sum(pagerank_nuevo.values())
             pagerank_nuevo = {v: pr / suma_total for v, pr in pagerank_nuevo.items()}
-
             cambio_total = sum(abs(pagerank_nuevo[v] - pagerank_actual[v]) for v in vertices)
             pagerank_actual = pagerank_nuevo
             if cambio_total < tolerancia:
@@ -126,7 +129,7 @@ class Recomendify:
         nodos_iniciales = [cancion for cancion in canciones]
         visitas_acumuladas = random_walk_multiples(grafo, nodos_iniciales, largo, iteraciones)
         recs_ordenadas = []
-        if tipo == "canciones":
+        if tipo == CANCIONES:
             recomendaciones = {
                 nodo: valor
                 for nodo, valor in visitas_acumuladas.items()
@@ -134,7 +137,7 @@ class Recomendify:
             }
             recs_ordenadas = sorted(recomendaciones.items(), key=lambda x: x[1], reverse=True)
             return "; ".join(f"{cancion[0]} - {cancion[1]}" for cancion, _ in recs_ordenadas[:cantidad])
-        elif tipo == "usuarios":
+        elif tipo == USUARIOS:
             recomendaciones = {
                 nodo: valor
                 for nodo, valor in visitas_acumuladas.items()
@@ -179,7 +182,7 @@ def main():
         datos = entrada.split(" ", 1)
         comando = datos[0]
         resto = datos[1] if len(datos) > 1 else ""
-        if comando == "camino":
+        if comando == CAMINO:
             canciones = resto.split(" >>>> ")
             if len(canciones) < 2:
                 print("Error: formato de camino incorrecto.")
@@ -188,11 +191,11 @@ def main():
             segunda_cancion = canciones[1].split(" - ", 1)
             camino = recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
             print(camino)
-        elif comando == "mas_importantes":
+        elif comando == IMPORTANTES:
             resto = int(resto)
             canciones = recomendify.mas_importantes(resto)
             print(canciones)
-        elif comando == "recomendacion":
+        elif comando == RECOMENDACION:
             info = resto.split(" ", 2)
             tipo = info[0]
             cantidad = int(info[1]) if len(info) > 1 else 0
@@ -204,7 +207,7 @@ def main():
                 canciones.append((actual[0], actual[1]))
             recomendaciones = recomendify.recomendar(recomendify.grafo_bipartito, tipo, cantidad, canciones, 50, 5000)
             print(recomendaciones)
-        elif comando == "ciclo":
+        elif comando == CICLO:
             mas_datos = resto.split(" ", 1)
             if len(mas_datos) < 2:
                 print("Error: formato de ciclo incorrecto.")
