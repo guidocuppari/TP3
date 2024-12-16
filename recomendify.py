@@ -51,14 +51,14 @@ class Recomendify:
         for i in range(len(recorrido) - 1):
             origen = recorrido[i]
             destino = recorrido[i + 1]
-            if origen in self.diccionario: #destino es la cancion
+            if origen in self.diccionario:
                 canciones_visitadas.add(destino)
                 playlist = next((p for c, p in self.diccionario[origen] if c == destino), None)
                 if origen in usuarios_visitados:
                     resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[0]} - {destino[1]}")
                     continue
                 resultado.append(f"{destino[0]} - {destino[1]} --> aparece en playlist --> {playlist} --> de --> {origen}")
-            elif destino in self.diccionario: #origen es la cancion
+            elif destino in self.diccionario:
                 usuarios_visitados.add(destino)
                 playlist = next((p for c, p in self.diccionario[destino] if c == origen), None)
                 if origen in canciones_visitadas:
@@ -83,7 +83,7 @@ class Recomendify:
             pagerank_nuevo = {v: (1 - d) / N for v in vertices}
 
             for v in vertices:
-                for u in grafo.obtener_adyacentes(v):  # u -> v (aristas entrantes a v)
+                for u in grafo.adyacentes[v]:  # u -> v (aristas entrantes a v)
                     pagerank_nuevo[v] += d * pagerank_actual[u] / grafo.grado_salida(u)
 
             suma_total = sum(pagerank_nuevo.values())
@@ -114,15 +114,6 @@ class Recomendify:
         pass
         
     def cargar_grafo_de_canciones(self):
-        visitadas = set()
-
-        for _, canciones in self.diccionario.items():
-            for (cancion, _) in canciones:
-                if cancion not in visitadas:
-                    self.grafo_canciones.agregar_vertice(cancion)
-                    visitadas.add(cancion)
-        
-
         for _, canciones in self.diccionario.items():
             canciones_usuario = set(cancion for (cancion, _) in canciones)
             canciones_usuario = list(canciones_usuario)
@@ -144,7 +135,6 @@ class Recomendify:
         camino = [inicio]
         return dfs_ciclo_n(self.grafo_canciones, inicio, visitados, camino, largo)
 
-        
 
 def main():
     param = argparse.ArgumentParser(None)
