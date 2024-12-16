@@ -1,3 +1,6 @@
+import random
+from collections import defaultdict
+
 from grafos import Grafo
 from heap import Heap
 from cola import Cola
@@ -163,13 +166,41 @@ def bfs_distancias(grafo, origen, n):
                     lista.append(w)
     return lista
 
+def nodos_similares(grafo, nodos_interes, largo_recorrido=100, iteraciones=1000):
+    visitas_acumuladas = random_walk_multiples(grafo, nodos_interes, largo_recorrido, iteraciones)
+    similares = sorted(visitas_acumuladas.items(), key=lambda x: x[1], reverse=True)
+    return similares
+
+def random_walk_multiples(grafo, nodos_iniciales, largo_recorrido, iteraciones):
+    visitas_acumuladas = defaultdict(float)
+
+    for _ in range(iteraciones):
+        nodo_inicial = random.choice(nodos_iniciales)
+        visitas = random_walk(grafo, nodo_inicial, largo_recorrido)
+        for nodo, valor in visitas.items():
+            visitas_acumuladas[nodo] += valor
+
+    return visitas_acumuladas
 
 
 
+def random_walk(grafo, nodo_inicial, largo_recorrido):
+    visitas = defaultdict(float)
+    nodo_actual = nodo_inicial
+    valor = 1.0
 
+    for _ in range(largo_recorrido):
+        visitas[nodo_actual] += valor
+        adyacentes = grafo.obtener_adyacentes(nodo_actual)
 
+        if not adyacentes:  # Nodo sin conexiones
+            break
 
+        grado_salida = len(adyacentes)
+        valor /= grado_salida
+        nodo_actual = random.choice(adyacentes)
 
+    return visitas
 
 
 

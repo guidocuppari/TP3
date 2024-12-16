@@ -1,7 +1,7 @@
 from grafos import Grafo
 from heap import Heap
 from collections import Counter
-from biblioteca import camino_minimo_bfs, bfs_distancias, dfs_ciclo_n
+from biblioteca import camino_minimo_bfs, bfs_distancias, dfs_ciclo_n, random_walk_multiples
 import argparse
 import os
 
@@ -91,7 +91,6 @@ class Recomendify:
         pagerank = self.pagerank(self.grafo_bipartito)
 
         canciones = {nodo: pagerank[nodo] for nodo in pagerank if self.es_cancion(nodo)}
-        print(canciones)
         canciones_importantes = sorted(canciones.items(), key=lambda item: item[1], reverse=True)
         top_canciones = canciones_importantes[:n]
         return "; ".join(f"{cancion}" for cancion, _ in top_canciones)
@@ -130,6 +129,27 @@ class Recomendify:
         camino = [inicio]
         return dfs_ciclo_n(self.grafo_canciones, inicio, visitados, camino, largo)
 
+    def recomendar(self, grafo, tipo, cantidad, canciones, largo=100, iteraciones=500):
+        nodos_iniciales = [cancion for cancion in canciones]
+        visitas_acumuladas = random_walk_multiples(grafo, nodos_iniciales, largo, iteraciones)
+
+        if tipo == "canciones":
+            recomendaciones = {
+                nodo: valor
+                for nodo, valor in visitas_acumuladas.items()
+                if isinstance(nodo, tuple) and nodo not in canciones
+            }
+        elif tipo == "usuarios":
+            recomendaciones = {
+                nodo: valor
+                for nodo, valor in visitas_acumuladas.items()
+                if isinstance(nodo, str) and nodo not in nodos_iniciales
+            }
+        else:
+            raise ValueError("Tipo debe ser 'canciones' o 'usuarios'.")
+
+        recomendaciones_ordenadas = sorted(recomendaciones.items(), key=lambda x: x[1], reverse=True)
+        return [nodo for nodo, _ in recomendaciones_ordenadas[:cantidad]]
 
 
 
@@ -187,17 +207,12 @@ def main():
              canciones = info[2] if len(info) > 2 else ""
              divididas = canciones.split(" >>>> ")
 
-             tuplas = []
+             canciones = []
              for cancion in divididas:
                  actual = cancion.split(" - ", 1)
-                 tuplas.append((actual[0], actual[1]))
-
-             if tipo == "canciones":
-                 canciones_rec = recomendify.recomendar_canciones(cantidad, tuplas)
-                 print(canciones_rec)
-             elif tipo == "usuarios":
-                 usuarios_rec = recomendify.recomendar_usuarios(cantidad, tuplas)
-                 print(usuarios_rec)
+                 canciones.append((actual[0], actual[1]))
+             recomendaciones = recomendify.recomendar(recomendify.grafo_bipartito, tipo, cantidad, canciones, 50, 5000)
+             print(recomendaciones)
 
          elif comando == "ciclo":
              mas_datos = resto.split(" ", 1)
