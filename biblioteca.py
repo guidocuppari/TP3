@@ -1,10 +1,8 @@
 import random
 from collections import defaultdict
-
 from grafos import Grafo
 from heap import Heap
 from cola import Cola
-
 
 def camino_minimo_dijkstra(grafo, origen, destino):
     distancia, padres = {}
@@ -34,14 +32,11 @@ def camino_minimo_bfs(grafo, origen):
     distancia[origen] = 0
     padres[origen] = None
     visitado[origen] = False
-
-
     q = Cola()
     q.encolar(origen)
 
     while not q.esta_vacia():
         v = q.desencolar()
-
         for w in grafo.obtener_adyacentes(v):
             if w not in visitado:
                 distancia[w] = distancia[v] + 1
@@ -69,7 +64,6 @@ def mst_prim(grafo, distancias):
             if x not in visitados:
                 q.encolar(grafo.peso_arista(x, w), x)
     return arbol
-
 
 def ordenar_vertices(grafo, distancias):
     vertices = grafo.obtener_vertices()
@@ -103,7 +97,6 @@ def grados_entrada(grafo):
             entrada[w] += 1
     return entrada
 
-
 def topologico_entrada(grafo):
     entrada = grados_entrada(grafo)
     q = Cola()
@@ -120,19 +113,8 @@ def topologico_entrada(grafo):
                 q.encolar(w)
     return resultado
 
-def reconstruir_ciclo(padre, inicio, fin):
-    v = fin
-    camino = []
-    while v != inicio:
-        camino.append(v)
-        v = padre[v]
-    camino.append(inicio)
-    return camino[::-1]
-
-
 def dfs_ciclo_n(grafo, actual, visitados, camino, largo):
     inicio = camino[0]
-
     if len(visitados) == largo and inicio == visitados[0]:
         camino.append(inicio)
         return camino
@@ -147,6 +129,7 @@ def dfs_ciclo_n(grafo, actual, visitados, camino, largo):
             visitados.pop()
             camino.pop()
     return None
+
 def bfs_distancias(grafo, origen, n):
     distancias = {}
     lista = []
@@ -182,8 +165,6 @@ def random_walk_multiples(grafo, nodos_iniciales, largo_recorrido, iteraciones):
 
     return visitas_acumuladas
 
-
-
 def random_walk(grafo, nodo_inicial, largo_recorrido):
     visitas = defaultdict(float)
     nodo_actual = nodo_inicial
@@ -201,14 +182,3 @@ def random_walk(grafo, nodo_inicial, largo_recorrido):
         nodo_actual = random.choice(adyacentes)
 
     return visitas
-
-
-
-
-
-
-
-
-
-
-
