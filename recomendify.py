@@ -136,7 +136,6 @@ class Recomendify:
             return 0
 
         canciones_a_n_saltos = bfs_distancias(self.grafo_canciones, cancion_inicio, n)
-
         return len(canciones_a_n_saltos)
 
 
@@ -171,13 +170,6 @@ def main():
     recomendify.cargar_grafo()
     recomendify.cargar_grafo_de_canciones()
 
-    # for w in recomendify.grafo_canciones.obtener_vertices():
-    #     print(w)
-    # for w in recomendify.grafo_canciones.adyacentes[('By The Way', 'Red Hot Chili Peppers')]:
-    #     print(w)
-
-    # if ('By The Way', 'Red Hot Chili Peppers') in recomendify.grafo_canciones.obtener_vertices():
-    #     print("True")
     entradas = []
     while True:
         linea = input()
@@ -232,7 +224,7 @@ def main():
                 continue
             largo = mas_datos[0]
             cancion = mas_datos[1].split(" - ", 1)
-            ciclo = recomendify.ciclo_n_canciones(largo, (cancion[0], cancion[1]))
+            ciclo = recomendify.buscar_ciclo_n((cancion[0], cancion[1]), largo)
             print(ciclo)
         else:
             mas_datos = resto.split(" ", 1)

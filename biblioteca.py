@@ -123,7 +123,7 @@ def dfs_ciclo_n(grafo, actual, visitados, camino, largo):
         camino.append(inicio)
         return camino
 
-    for vecino in grafo.obtener_adyacentes(actual):
+    for vecino in grafo.adyacentes[actual]:
         if vecino not in visitados:
             visitados.append(vecino)
             camino.append(vecino)
