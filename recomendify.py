@@ -46,18 +46,25 @@ class Recomendify:
 
         recorrido.reverse()
         resultado = []
+        usuarios_visitados = set()
+        canciones_visitadas = set()
         for i in range(len(recorrido) - 1):
             origen = recorrido[i]
             destino = recorrido[i + 1]
-
             if origen in self.diccionario:
+                canciones_visitadas.add(destino)
                 playlist = next((p for c, p in self.diccionario[origen] if c == destino), None)
-                resultado.append(f"{destino} --> aparece en playlist --> {playlist} --> de --> {origen}")
+                if origen in usuarios_visitados:
+                    resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[0]} - {destino[1]}")
+                    continue
+                resultado.append(f"{destino[0]} - {destino[1]} --> aparece en playlist --> {playlist} --> de --> {origen}")
             elif destino in self.diccionario:
+                usuarios_visitados.add(destino)
                 playlist = next((p for c, p in self.diccionario[destino] if c == origen), None)
-                resultado.append(f"{origen} --> aparece en playlist --> {playlist} --> de --> {destino}")
-            else:
-                resultado.append(f"{origen} --> donde aparece --> {destino}")
+                if origen in canciones_visitadas:
+                    resultado.append(f"aparece en playlist --> {playlist} --> de --> {destino}")
+                    continue
+                resultado.append(f"{origen[0]} - {origen[1]} --> aparece en playlist --> {playlist} --> de --> {destino}")
 
         return " --> ".join(resultado)
 
