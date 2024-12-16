@@ -102,15 +102,6 @@ class Recomendify:
     def es_cancion(self, nodo):
         return isinstance(nodo, tuple) and len(nodo) == 2
 
-    def obtener_canciones(self):
-        canciones = set()
-        for usuario, canciones_usuario in self.diccionario.items():
-            if isinstance(canciones_usuario, (set, list)):
-                canciones.update(canciones_usuario)
-        return canciones
-
-
-
     def cargar_grafo_de_canciones(self):
         for usuario, canciones in self.diccionario.items():
             canciones_usuario = set(cancion for cancion, _ in canciones)
