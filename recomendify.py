@@ -27,7 +27,7 @@ class Recomendify:
                 self.diccionario[usuario] = {}
             self.diccionario[usuario][(cancion[NOMBRE_CANCION], cancion[ARTISTA])] = playlist
 
-    def agregar_nuevo_vertice(grafo, vertice, agregados):
+    def agregar_nuevo_vertice(self, grafo, vertice, agregados):
         if vertice not in agregados:
             grafo.agregar_vertice(vertice)
             agregados.add(vertice)
@@ -35,18 +35,18 @@ class Recomendify:
     def cargar_grafo(self):
         vertices_agregados = set()
         for usuario, canciones in self.diccionario.items():
-            self.agregar_nuevo_vertice(usuario, vertices_agregados)
+            self.agregar_nuevo_vertice(self.grafo_bipartito, usuario, vertices_agregados)
             for cancion in canciones.keys():
                 self.agregar_nuevo_vertice(self.grafo_bipartito, cancion, vertices_agregados)
                 self.grafo_bipartito.agregar_arista(usuario, cancion)
         
-    def mensaje_camino_usuario(resultado, origen, destino, playlist, visitados_usuarios):
+    def mensaje_camino_usuario(self, resultado, origen, destino, playlist, visitados_usuarios):
         if origen in visitados_usuarios:
             resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[NOMBRE_CANCION]} - {destino[ARTISTA]}")
             return
         resultado.append(f"{destino[NOMBRE_CANCION]} - {destino[ARTISTA]} --> aparece en playlist --> {playlist} --> de --> {origen}")
     
-    def mensaje_camino_cancion(resultado, origen, destino, playlist, visitados_canciones):
+    def mensaje_camino_cancion(self, resultado, origen, destino, playlist, visitados_canciones):
         if origen in visitados_canciones:
             resultado.append(f"aparece en playlist --> {playlist} --> de --> {destino}")
             return
@@ -68,10 +68,10 @@ class Recomendify:
                 playlist = self.diccionario[destino].get(origen)
                 self.mensaje_camino_cancion(resultado, origen, destino, playlist, canciones_visitadas)
 
-    def error_existencia_vertice(vertice):
+    def error_existencia_vertice(self, vertice):
         return f"Error: {vertice} no está en el grafo"
     
-    def restaurar_recorrido(vertice, recorrido, padres):
+    def restaurar_recorrido(self, vertice, recorrido, padres):
         actual = vertice
         while actual is not None:
             recorrido.append(actual)
@@ -86,7 +86,7 @@ class Recomendify:
 
         padres, _ = camino_minimo_bfs(self.grafo_bipartito, cancion_origen)
         if cancion_destino not in padres:
-            return "No se encontró recorrido"
+            return "No se encontro recorrido"
 
         recorrido = []
         self.restaurar_recorrido(cancion_destino, recorrido, padres)
@@ -140,7 +140,8 @@ class Recomendify:
     def cargar_grafo_de_canciones(self):
         visitados = set()
         for canciones in self.diccionario.values():
-            self.agregar_nuevo_vertice(self.grafo_canciones, canciones, visitados)
+            for cancion in canciones.keys():
+                self.agregar_nuevo_vertice(self.grafo_canciones, cancion, visitados)
 
         for canciones in self.diccionario.values():
             canciones_usuario = list(canciones.keys())
@@ -229,17 +230,17 @@ def guardar_canciones(divididas, canciones):
         canciones.append((actual[NOMBRE_CANCION].strip(), actual[ARTISTA].strip()))
 
 def error_formato_entrada(cantidad):
-    if cantidad is None or cantidad < 2:
-        return "Error: formato de camino incorrecto."
+    if cantidad is None:
+        return "Error: formato incorrecto."
     return None
 
-def datos_comando_recomendacion(info, canciones):
+def datos_comando_recomendacion(info, total_canciones):
     info = info.split(" ", 2)
     tipo = info[0]
     cantidad = int(info[1]) if len(info) > 1 else 0
     canciones = info[2] if len(info) > 2 else ""
     divididas = canciones.split(" >>>> ")
-    guardar_canciones(divididas, canciones)
+    guardar_canciones(divididas, total_canciones)
     return tipo, cantidad
     
 def efectuar_comandos(recomendify, entradas):
@@ -249,9 +250,8 @@ def efectuar_comandos(recomendify, entradas):
         resto = datos[1] if len(datos) > 1 else ""
         if comando == CAMINO:
             canciones = resto.split(" >>>> ")
-            mensaje = error_formato_entrada(len(canciones))
-            if mensaje is not None:
-                print(mensaje)
+            if len(canciones) < 2:
+                print("Error: formato incorrecto")
                 continue
             primer_cancion = canciones[0].split(" - ", 1)
             segunda_cancion = canciones[1].split(" - ", 1)
