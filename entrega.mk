@@ -1,3 +1,5 @@
-recomendify: recomendify.py grafos.py biblioteca.py
-    cp recomendify.py recomendify
-    chmod +x recomendify
+recomendify: recomendify.py grafo.py biblioteca.py heap.py pila.py cola.py
+	rm -f ./recomendify
+	cp recomendify.py recomendify
+	chmod +x recomendify
+
