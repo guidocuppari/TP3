@@ -241,22 +241,8 @@ def datos_comando_recomendacion(info, canciones):
     divididas = canciones.split(" >>>> ")
     guardar_canciones(divididas, canciones)
     return tipo, cantidad
-       
-def main(): #modularizar
-    param = argparse.ArgumentParser(None)
-    param.add_argument("ruta", type=str)
-    archivo = param.parse_args()
-
-    if not os.path.isfile(archivo.ruta):
-        return "El archivo no existe"
-
-    imp = []
-    leer_archivo(archivo.ruta, imp)
-    recomendify = Recomendify()
-    cargar_estructuras(recomendify, imp)
-    entradas = []
-    leer_entrada(entradas)
-
+    
+def efectuar_comandos(recomendify, entradas):
     for entrada in entradas:
         datos = entrada.split(" ", 1)
         comando = datos[0]
@@ -303,6 +289,22 @@ def main(): #modularizar
                 continue
             rango = recomendify.rango(saltos, tupla)
             print(rango)
+        
+def main():
+    param = argparse.ArgumentParser(None)
+    param.add_argument("ruta", type=str)
+    archivo = param.parse_args()
+
+    if not os.path.isfile(archivo.ruta):
+        return "El archivo no existe"
+
+    imp = []
+    leer_archivo(archivo.ruta, imp)
+    recomendify = Recomendify()
+    cargar_estructuras(recomendify, imp)
+    entradas = []
+    leer_entrada(entradas)
+    efectuar_comandos(recomendify, entradas)
 
 if __name__ == "__main__":
     main()
