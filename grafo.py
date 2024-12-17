@@ -15,7 +15,7 @@ def error_arista(self, v, w):
 class Grafo:
     def __init__(self, es_dirigido=False, vertices_init=[]):
         self.dirigido = es_dirigido
-        self.adyacentes = {v: {} for v in vertices_init} #reutilizar primitiva y cambiar nombre
+        self.vertices_adyacentes = {self.agregar_vertice(v) for v in vertices_init}
 
     def agregar_vertice(self, v):
         if v not in self.adyacentes:
