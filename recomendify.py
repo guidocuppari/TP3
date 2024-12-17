@@ -1,123 +1,149 @@
-#!/usr/bin/python3
-from grafos import Grafo
-from collections import Counter
-from biblioteca import camino_minimo_bfs, bfs_distancias, dfs_ciclo_n
+#!/usr/bin/env python3
+from grafo import Grafo
+from biblioteca import camino_minimo_bfs, bfs_distancias, dfs_ciclo_n, random_walk_multiples
 import argparse
 import os
+import sys
 
-
+CANCIONES = "canciones"
+USUARIOS = "usuarios"
+CAMINO = "camino"
+IMPORTANTES = "mas_importantes"
+RECOMENDACION = "recomendacion"
+CICLO = "ciclo"
+NOMBRE_CANCION = 0
+ARTISTA = 1
 
 class Recomendify:
     def __init__(self):
         self.grafo_bipartito = Grafo()
         self.diccionario = {} #dicionario con el nombre como clave y el valor es una tupla de cancion y playlist en la que aparece
         self.grafo_canciones = Grafo()
+        self.pagerank_cache = None
 
     def cargar_diccionario(self, datos):
-        for nombre_user, cancion, playlist in datos: #cancion es una tupla (nombre_cancion, artista)
-            if nombre_user not in self.diccionario:
-                self.diccionario[nombre_user] = []
-            self.diccionario[nombre_user].append((cancion, playlist))
+        for usuario, cancion, playlist in datos:
+            if usuario not in self.diccionario:
+                self.diccionario[usuario] = {}
+            self.diccionario[usuario][(cancion[NOMBRE_CANCION], cancion[ARTISTA])] = playlist
 
-    def cargar_grafo(self):
-        for nombre_user, canciones in self.diccionario.items():
-            self.grafo_bipartito.agregar_vertice(nombre_user)
-            for (cancion, _) in canciones:
-                if cancion not in self.grafo_bipartito.obtener_vertices():
-                    self.grafo_bipartito.agregar_vertice(cancion)
-                self.grafo_bipartito.agregar_arista(nombre_user, cancion)
-
-    def camino_minimo(self, cancion_origen, cancion_destino):
-        if cancion_origen not in self.grafo_bipartito.obtener_vertices():
-            return f"Error: {cancion_origen} no está en el grafo"
-        if cancion_destino not in self.grafo_bipartito.obtener_vertices():
-            return f"Error: {cancion_destino} no está en el grafo"
+    def agregar_nuevo_vertice(grafo, vertice, agregados):
+        if vertice not in agregados:
+            grafo.agregar_vertice(vertice)
+            agregados.add(vertice)
         
-        padres, _ = camino_minimo_bfs(self.grafo_bipartito, cancion_origen)
+    def cargar_grafo(self):
+        vertices_agregados = set()
+        for usuario, canciones in self.diccionario.items():
+            self.agregar_nuevo_vertice(usuario, vertices_agregados)
+            for cancion in canciones.keys():
+                self.agregar_nuevo_vertice(self.grafo_bipartito, cancion, vertices_agregados)
+                self.grafo_bipartito.agregar_arista(usuario, cancion)
+        
+    def mensaje_camino_usuario(resultado, origen, destino, playlist, visitados_usuarios):
+        if origen in visitados_usuarios:
+            resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[NOMBRE_CANCION]} - {destino[ARTISTA]}")
+            return
+        resultado.append(f"{destino[NOMBRE_CANCION]} - {destino[ARTISTA]} --> aparece en playlist --> {playlist} --> de --> {origen}")
+    
+    def mensaje_camino_cancion(resultado, origen, destino, playlist, visitados_canciones):
+        if origen in visitados_canciones:
+            resultado.append(f"aparece en playlist --> {playlist} --> de --> {destino}")
+            return
+        resultado.append(f"{origen[NOMBRE_CANCION]} - {origen[ARTISTA]} --> aparece en playlist --> {playlist} --> de --> {destino}")
 
-        if cancion_destino not in padres:
-            return "No se encontró recorrido"
-
-        recorrido = []
-        actual = cancion_destino
-        while actual is not None:
-            recorrido.append(actual)
-            actual = padres[actual]
-
-        recorrido.reverse()
-        resultado = []
-        usuarios_visitados = set()
+    def armar_resultado_camino(self, recorrido, resultado):
         canciones_visitadas = set()
+        usuarios_visitados = set()
+
         for i in range(len(recorrido) - 1):
             origen = recorrido[i]
             destino = recorrido[i + 1]
             if origen in self.diccionario:
                 canciones_visitadas.add(destino)
-                playlist = next((p for c, p in self.diccionario[origen] if c == destino), None)
-                if origen in usuarios_visitados:
-                    resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[0]} - {destino[1]}")
-                    continue
-                resultado.append(f"{destino[0]} - {destino[1]} --> aparece en playlist --> {playlist} --> de --> {origen}")
+                playlist = self.diccionario[origen].get(destino)
+                self.mensaje_camino_usuario(resultado, origen, destino, playlist, usuarios_visitados)
             elif destino in self.diccionario:
                 usuarios_visitados.add(destino)
-                playlist = next((p for c, p in self.diccionario[destino] if c == origen), None)
-                if origen in canciones_visitadas:
-                    resultado.append(f"aparece en playlist --> {playlist} --> de --> {destino}")
-                    continue
-                resultado.append(f"{origen[0]} - {origen[1]} --> aparece en playlist --> {playlist} --> de --> {destino}")
+                playlist = self.diccionario[destino].get(origen)
+                self.mensaje_camino_cancion(resultado, origen, destino, playlist, canciones_visitadas)
 
+    def error_existencia_vertice(vertice):
+        return f"Error: {vertice} no está en el grafo"
+    
+    def restaurar_recorrido(vertice, recorrido, padres):
+        actual = vertice
+        while actual is not None:
+            recorrido.append(actual)
+            actual = padres.get(actual)
+        recorrido.reverse()
+
+    def camino_minimo(self, cancion_origen, cancion_destino):
+        if cancion_origen not in self.grafo_bipartito.obtener_vertices():
+            return self.error_existencia_vertice(cancion_origen)
+        if cancion_destino not in self.grafo_bipartito.obtener_vertices():
+            return self.error_existencia_vertice(cancion_destino)
+
+        padres, _ = camino_minimo_bfs(self.grafo_bipartito, cancion_origen)
+        if cancion_destino not in padres:
+            return "No se encontró recorrido"
+
+        recorrido = []
+        self.restaurar_recorrido(cancion_destino, recorrido, padres)
+        resultado = []
+        self.armar_resultado_camino(recorrido, resultado)
         return " --> ".join(resultado)
 
-    def es_cancion(self, vertice):
-        return isinstance(vertice, tuple) and len(vertice) == 2
+    def pagerank(self, d=0.85, iteraciones=100, tolerancia=1e-6):
+        if self.pagerank_cache is not None:
+            return self.pagerank_cache
 
-    def pagerank(self, grafo, d=0.85, iteraciones=100, tolerancia=1e-6):
-        vertices = grafo.obtener_vertices()
-        N = len(vertices)  # Número total de vértices
+        vertices = self.grafo_bipartito.obtener_vertices()
+        N = len(vertices)
         if N == 0:
             return {}
 
+        grados_salida = {v: self.grafo_bipartito.grado_salida(v) or 1 for v in vertices}
         pagerank_actual = {v: 1 / N for v in vertices}
-
         for _ in range(iteraciones):
+            cambio_total = 0
             pagerank_nuevo = {v: (1 - d) / N for v in vertices}
+            for v in vertices:
+                contribucion = d * pagerank_actual[v] / grados_salida[v]
+                for u in self.grafo_bipartito.obtener_adyacentes(v):
+                    pagerank_nuevo[u] += contribucion
 
             for v in vertices:
-                for u in grafo.adyacentes[v]:  # u -> v (aristas entrantes a v)
-                    pagerank_nuevo[v] += d * pagerank_actual[u] / grafo.grado_salida(u)
+                cambio_total += abs(pagerank_nuevo[v] - pagerank_actual[v])
+                pagerank_actual[v] = pagerank_nuevo[v]
 
-            suma_total = sum(pagerank_nuevo.values())
-            pagerank_nuevo = {v: pr / suma_total for v, pr in pagerank_nuevo.items()}
-
-            cambio_total = sum(abs(pagerank_nuevo[v] - pagerank_actual[v]) for v in vertices)
-            pagerank_actual = pagerank_nuevo
             if cambio_total < tolerancia:
                 break
 
+        self.pagerank_cache = pagerank_actual
         return pagerank_actual
 
+    def invalidar_pagerank(self):
+        self.pagerank_cache = None
+
     def mas_importantes(self, n):
-        pagerank = self.pagerank(self.grafo_bipartito)
+        pagerank = self.pagerank()
+        canciones_importantes = [
+            (nodo, valor) for nodo, valor in pagerank.items() if self.es_cancion(nodo)
+        ]
+        canciones_importantes.sort(key=lambda x: x[1], reverse=True)
+        return "; ".join(f"{cancion[NOMBRE_CANCION]} - {cancion[ARTISTA]}" for cancion, _ in canciones_importantes[:n])
 
-        canciones = {nodo: pagerank[nodo] for nodo in pagerank if self.es_cancion(nodo)}
-        canciones_importantes = sorted(canciones.items(), key=lambda item: item[1], reverse=True)
-        top_canciones = canciones_importantes[:n]
-        return "; ".join(f"{cancion[0]} - {cancion[1]}" for cancion, _ in top_canciones)
+    def es_cancion(self, nodo):
+        return isinstance(nodo, tuple) and len(nodo) == 2
 
-    def page_rank_personalizado(self, cancion, d=0.85, iteraciones=100):
-        pass
-
-    def recomendar_canciones(self, n, canciones_iniciales):
-        pass
-
-    def recomendar_usuarios(self, n, canciones):
-        pass
-        
     def cargar_grafo_de_canciones(self):
-        for _, canciones in self.diccionario.items():
-            canciones_usuario = set(cancion for (cancion, _) in canciones)
-            canciones_usuario = list(canciones_usuario)
+        visitados = set()
+        for canciones in self.diccionario.values():
+            self.agregar_nuevo_vertice(self.grafo_canciones, canciones, visitados)
 
+        for canciones in self.diccionario.values():
+            canciones_usuario = list(canciones.keys())
             for i in range(len(canciones_usuario)):
                 for j in range(i + 1, len(canciones_usuario)):
                     self.grafo_canciones.agregar_arista(canciones_usuario[i], canciones_usuario[j])
@@ -129,23 +155,50 @@ class Recomendify:
         canciones_a_n_saltos = bfs_distancias(self.grafo_canciones, cancion_inicio, n)
         return len(canciones_a_n_saltos)
 
-
     def buscar_ciclo_n(self, inicio, largo):
         visitados = [inicio]
         camino = [inicio]
-        return dfs_ciclo_n(self.grafo_canciones, inicio, visitados, camino, largo)
+        resultado = dfs_ciclo_n(self.grafo_canciones, inicio, visitados, camino, largo)
+        if resultado is None:
+            return "No se encontro recorrido"
+        
+        return " --> ".join(f"{cancion[NOMBRE_CANCION]} - {cancion[ARTISTA]}" for cancion in resultado)
 
+    def recomendar(self, grafo, tipo, cantidad, canciones, largo=100, iteraciones=500):
+        nodos_iniciales = [cancion for cancion in canciones]
+        visitas_acumuladas = random_walk_multiples(grafo, nodos_iniciales, largo, iteraciones)
+        if tipo == CANCIONES:
+            recomendaciones = {
+                nodo: valor
+                for nodo, valor in visitas_acumuladas.items()
+                if isinstance(nodo, tuple) and nodo not in canciones
+            }
+            recs_ordenadas = sorted(recomendaciones.items(), key=lambda x: x[1], reverse=True)
+            return "; ".join(f"{cancion[NOMBRE_CANCION]} - {cancion[ARTISTA]}" for cancion, _ in recs_ordenadas[:cantidad])
+        elif tipo == USUARIOS:
+            recomendaciones = {
+                nodo: valor
+                for nodo, valor in visitas_acumuladas.items()
+                if isinstance(nodo, str) and nodo not in nodos_iniciales
+            }
+            recs_ordenadas = sorted(recomendaciones.items(), key=lambda x: x[1], reverse=True)
+            return "; ".join(f"{usuario}" for usuario, _ in recs_ordenadas[:cantidad])
+        
+        raise ValueError("Tipo debe ser 'canciones' o 'usuarios'.")
 
-def main():
-    param = argparse.ArgumentParser(None)
-    param.add_argument("ruta", type=str)
-    archivo = param.parse_args()
+def leer_entrada(entradas):
+    for linea in sys.stdin:
+        linea = linea.strip()
+        if linea == "":
+            break
+        entradas.append(linea)
 
-    if not os.path.isfile(archivo.ruta):
-        return "Error"
+def cargar_estructuras(recomendify, datos):
+    recomendify.cargar_diccionario(datos)
+    recomendify.cargar_grafo()
 
-    imp = []
-    with open(archivo.ruta, 'r') as arc:
+def leer_archivo(ruta, datos):
+    with open(ruta, 'r') as arc:
         next(arc)
         for linea in arc:
             info = linea.strip().split("\t")
@@ -153,80 +206,105 @@ def main():
             nombre_cancion = info[2]
             artista = info[3]
             nombre_playlist = info[5]
-            imp.append((user, (nombre_cancion, artista), nombre_playlist))
+            datos.append((user, (nombre_cancion, artista), nombre_playlist))
 
-    recomendify = Recomendify()
-    recomendify.cargar_diccionario(imp)
-    recomendify.cargar_grafo()
-    recomendify.cargar_grafo_de_canciones()
+def separar_datos(info):
+    mas_datos = info.split(" ", 1)
+    if len(mas_datos) < 2 or not mas_datos[0].isdigit():
+        return None, None
+    largo = int(mas_datos[0])
 
-    entradas = []
-    while True:
-        linea = input()
-        if linea == "":
-            break
-        entradas.append(linea)
+    cancion = mas_datos[1].split(" - ", 1)
+    if len(cancion) < 2:
+        return None, None
+    inicio = (cancion[NOMBRE_CANCION].strip(), cancion[ARTISTA].strip())
 
+    return largo, inicio
+
+def guardar_canciones(divididas, canciones):
+    for cancion in divididas:
+        actual = cancion.split(" - ", 1)
+        if len(actual) < 2:
+            continue
+        canciones.append((actual[NOMBRE_CANCION].strip(), actual[ARTISTA].strip()))
+
+def error_formato_entrada(cantidad):
+    if cantidad is None or cantidad < 2:
+        return "Error: formato de camino incorrecto."
+    return None
+
+def datos_comando_recomendacion(info, canciones):
+    info = info.split(" ", 2)
+    tipo = info[0]
+    cantidad = int(info[1]) if len(info) > 1 else 0
+    canciones = info[2] if len(info) > 2 else ""
+    divididas = canciones.split(" >>>> ")
+    guardar_canciones(divididas, canciones)
+    return tipo, cantidad
+    
+def efectuar_comandos(recomendify, entradas):
     for entrada in entradas:
         datos = entrada.split(" ", 1)
         comando = datos[0]
         resto = datos[1] if len(datos) > 1 else ""
-        if comando == "camino":
+        if comando == CAMINO:
             canciones = resto.split(" >>>> ")
-            if len(canciones) < 2:
-                print("Error: formato de camino incorrecto.")
+            mensaje = error_formato_entrada(len(canciones))
+            if mensaje is not None:
+                print(mensaje)
                 continue
-            
             primer_cancion = canciones[0].split(" - ", 1)
             segunda_cancion = canciones[1].split(" - ", 1)
             if len(primer_cancion) < 2 or len(segunda_cancion) < 2:
                 print("Tanto el origen como el destino deben ser canciones")
                 continue
-            camino = recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
+            origen = (primer_cancion[NOMBRE_CANCION], primer_cancion[ARTISTA])
+            destino = (segunda_cancion[NOMBRE_CANCION], segunda_cancion[ARTISTA])
+            camino = recomendify.camino_minimo(origen, destino)
             print(camino)
-        elif comando == "mas_importantes":
+        elif comando == IMPORTANTES:
             resto = int(resto)
             canciones = recomendify.mas_importantes(resto)
             print(canciones)
-        elif comando == "recomendacion":
-            info = resto.split(" ", 2)
-            tipo = info[0]
-            cantidad = int(info[1]) if len(info) > 1 else 0
-            canciones = info[2] if len(info) > 2 else ""
-            divididas = canciones.split(" >>>> ")
-
-            tuplas = []
-            for cancion in divididas:
-                actual = cancion.split(" - ", 1)
-                tuplas.append((actual[0], actual[1]))
-
-            if tipo == "canciones":
-                canciones_rec = recomendify.recomendar_canciones(cantidad, tuplas)
-                print(canciones_rec)
-            elif tipo == "usuarios":
-                usuarios_rec = recomendify.recomendar_usuarios(cantidad, tuplas)
-                print(usuarios_rec)
-
-        elif comando == "ciclo":
-            mas_datos = resto.split(" ", 1)
-            if len(mas_datos) < 2:
-                print("Error: formato de ciclo incorrecto.")
+        elif comando == RECOMENDACION:
+            canciones = []
+            tipo, cantidad = datos_comando_recomendacion(resto, canciones)
+            recomendaciones = recomendify.recomendar(recomendify.grafo_bipartito, tipo, cantidad, canciones, 50, 5000)
+            print(recomendaciones)
+        elif comando == CICLO:
+            recomendify.cargar_grafo_de_canciones()
+            largo, inicio = separar_datos(resto)
+            mensaje = error_formato_entrada(largo)
+            if mensaje is not None:
+                print(mensaje)
                 continue
-            largo = mas_datos[0]
-            cancion = mas_datos[1].split(" - ", 1)
-            ciclo = recomendify.buscar_ciclo_n((cancion[0], cancion[1]), largo)
+            ciclo = recomendify.buscar_ciclo_n(inicio, largo)
             print(ciclo)
         else:
-            mas_datos = resto.split(" ", 1)
-            if len(mas_datos) < 2:
-                print("Error: formato de salto incorrecto.")
+            recomendify.cargar_grafo_de_canciones()
+            saltos, tupla = separar_datos(resto)
+            mensaje = error_formato_entrada(saltos)
+            if mensaje is not None:
+                print(mensaje)
                 continue
-            saltos = int(mas_datos[0]) if mas_datos[0] else 0
-            cancion = mas_datos[1].split(" - ", 1)
-            tupla = (cancion[0], cancion[1])
             rango = recomendify.rango(saltos, tupla)
             print(rango)
+        
+def main():
+    param = argparse.ArgumentParser(None)
+    param.add_argument("ruta", type=str)
+    archivo = param.parse_args()
 
+    if not os.path.isfile(archivo.ruta):
+        return "El archivo no existe"
+
+    imp = []
+    leer_archivo(archivo.ruta, imp)
+    recomendify = Recomendify()
+    cargar_estructuras(recomendify, imp)
+    entradas = []
+    leer_entrada(entradas)
+    efectuar_comandos(recomendify, entradas)
 
 if __name__ == "__main__":
     main()
