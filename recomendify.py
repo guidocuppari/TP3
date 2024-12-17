@@ -220,6 +220,11 @@ def guardar_canciones(divididas, canciones):
             continue
         canciones.append((actual[NOMBRE_CANCION].strip(), actual[ARTISTA].strip()))
 
+def error_formato_entrada(cantidad):
+    if cantidad is None or cantidad < 2:
+        return "Error: formato de camino incorrecto."
+    return None
+        
 def main(): #modularizar
     param = argparse.ArgumentParser(None)
     param.add_argument("ruta", type=str)
@@ -241,8 +246,9 @@ def main(): #modularizar
         resto = datos[1] if len(datos) > 1 else ""
         if comando == CAMINO:
             canciones = resto.split(" >>>> ")
-            if len(canciones) < 2:
-                print("Error: formato de camino incorrecto.")
+            mensaje = error_formato_entrada(len(canciones))
+            if mensaje is not None:
+                print(mensaje)
                 continue
             primer_cancion = canciones[0].split(" - ", 1)
             segunda_cancion = canciones[1].split(" - ", 1)
@@ -268,16 +274,18 @@ def main(): #modularizar
         elif comando == CICLO:
             recomendify.cargar_grafo_de_canciones()
             largo, inicio = separar_datos(resto)
-            if largo is None:
-                print("Error: formato de ciclo incorrecto.")
+            mensaje = error_formato_entrada(largo)
+            if mensaje is not None:
+                print(mensaje)
                 continue
             ciclo = recomendify.buscar_ciclo_n(inicio, largo)
             print(ciclo)
         else:
             recomendify.cargar_grafo_de_canciones()
             saltos, tupla = separar_datos(resto)
-            if saltos is None:
-                print("Error: formato de salto incorrecto.")
+            mensaje = error_formato_entrada(saltos)
+            if mensaje is not None:
+                print(mensaje)
                 continue
             rango = recomendify.rango(saltos, tupla)
             print(rango)
