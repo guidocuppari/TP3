@@ -40,7 +40,19 @@ class Recomendify:
                 self.agregar_nuevo_vertice(self.grafo_bipartito, cancion, vertices_agregados)
                 self.grafo_bipartito.agregar_arista(usuario, cancion)
         
-    def armar_resultado_camino(self, recorrido, resultado): #modularizar
+    def mensaje_camino_usuario(resultado, origen, destino, playlist, visitados_usuarios):
+        if origen in visitados_usuarios:
+            resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[NOMBRE_CANCION]} - {destino[ARTISTA]}")
+            return
+        resultado.append(f"{destino[NOMBRE_CANCION]} - {destino[ARTISTA]} --> aparece en playlist --> {playlist} --> de --> {origen}")
+    
+    def mensaje_camino_cancion(resultado, origen, destino, playlist, visitados_canciones):
+        if origen in visitados_canciones:
+            resultado.append(f"aparece en playlist --> {playlist} --> de --> {destino}")
+            return
+        resultado.append(f"{origen[NOMBRE_CANCION]} - {origen[ARTISTA]} --> aparece en playlist --> {playlist} --> de --> {destino}")
+
+    def armar_resultado_camino(self, recorrido, resultado):
         canciones_visitadas = set()
         usuarios_visitados = set()
 
@@ -50,19 +62,11 @@ class Recomendify:
             if origen in self.diccionario:
                 canciones_visitadas.add(destino)
                 playlist = self.diccionario[origen].get(destino)
-
-                if origen in usuarios_visitados:
-                    resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[NOMBRE_CANCION]} - {destino[ARTISTA]}")
-                    continue
-                resultado.append(f"{destino[NOMBRE_CANCION]} - {destino[ARTISTA]} --> aparece en playlist --> {playlist} --> de --> {origen}")
+                self.mensaje_camino_usuario(resultado, origen, destino, playlist, usuarios_visitados)
             elif destino in self.diccionario:
                 usuarios_visitados.add(destino)
                 playlist = self.diccionario[destino].get(origen)
-
-                if origen in canciones_visitadas:
-                    resultado.append(f"aparece en playlist --> {playlist} --> de --> {destino}")
-                    continue
-                resultado.append(f"{origen[NOMBRE_CANCION]} - {origen[ARTISTA]} --> aparece en playlist --> {playlist} --> de --> {destino}")
+                self.mensaje_camino_cancion(resultado, origen, destino, playlist, canciones_visitadas)
 
     def error_existencia_vertice(vertice):
         return f"Error: {vertice} no está en el grafo"
@@ -136,9 +140,7 @@ class Recomendify:
     def cargar_grafo_de_canciones(self):
         visitados = set()
         for canciones in self.diccionario.values():
-            canciones_usuario = list(canciones.keys())
-            for i in range(len(canciones_usuario)):
-                self.agregar_nuevo_vertice(self.grafo_canciones, canciones_usuario[i], visitados)
+            self.agregar_nuevo_vertice(self.grafo_canciones, canciones, visitados)
 
         for canciones in self.diccionario.values():
             canciones_usuario = list(canciones.keys())
