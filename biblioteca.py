@@ -1,6 +1,6 @@
 import random
 from collections import defaultdict
-from grafos import Grafo
+from grafo import Grafo
 from heap import Heap
 from cola import Cola
 
