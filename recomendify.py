@@ -27,9 +27,9 @@ class Recomendify:
                 self.diccionario[usuario] = {}
             self.diccionario[usuario][(cancion[NOMBRE_CANCION], cancion[ARTISTA])] = playlist
 
-    def agregar_nuevo_vertice(self, vertice, agregados):
+    def agregar_nuevo_vertice(grafo, vertice, agregados):
         if vertice not in agregados:
-            self.grafo_bipartito.agregar_vertice(vertice)
+            grafo.agregar_vertice(vertice)
             agregados.add(vertice)
         
     def cargar_grafo(self):
@@ -37,7 +37,7 @@ class Recomendify:
         for usuario, canciones in self.diccionario.items():
             self.agregar_nuevo_vertice(usuario, vertices_agregados)
             for cancion in canciones.keys():
-                self.agregar_nuevo_vertice(cancion, vertices_agregados)
+                self.agregar_nuevo_vertice(self.grafo_bipartito, cancion, vertices_agregados)
                 self.grafo_bipartito.agregar_arista(usuario, cancion)
         
     def armar_resultado_camino(self, recorrido, resultado): #modularizar
@@ -133,7 +133,13 @@ class Recomendify:
     def es_cancion(self, nodo):
         return isinstance(nodo, tuple) and len(nodo) == 2
 
-    def cargar_grafo_de_canciones(self): #agregar vertices
+    def cargar_grafo_de_canciones(self):
+        visitados = set()
+        for canciones in self.diccionario.values():
+            canciones_usuario = list(canciones.keys())
+            for i in range(len(canciones_usuario)):
+                self.agregar_nuevo_vertice(self.grafo_canciones, canciones_usuario[i], visitados)
+
         for canciones in self.diccionario.values():
             canciones_usuario = list(canciones.keys())
             for i in range(len(canciones_usuario)):
