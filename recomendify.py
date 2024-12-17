@@ -232,7 +232,16 @@ def error_formato_entrada(cantidad):
     if cantidad is None or cantidad < 2:
         return "Error: formato de camino incorrecto."
     return None
-        
+
+def datos_comando_recomendacion(info, canciones):
+    info = info.split(" ", 2)
+    tipo = info[0]
+    cantidad = int(info[1]) if len(info) > 1 else 0
+    canciones = info[2] if len(info) > 2 else ""
+    divididas = canciones.split(" >>>> ")
+    guardar_canciones(divididas, canciones)
+    return tipo, cantidad
+       
 def main(): #modularizar
     param = argparse.ArgumentParser(None)
     param.add_argument("ruta", type=str)
@@ -263,20 +272,17 @@ def main(): #modularizar
             if len(primer_cancion) < 2 or len(segunda_cancion) < 2:
                 print("Tanto el origen como el destino deben ser canciones")
                 continue
-            camino = recomendify.camino_minimo((primer_cancion[NOMBRE_CANCION], primer_cancion[ARTISTA]), (segunda_cancion[NOMBRE_CANCION], segunda_cancion[ARTISTA]))
+            origen = (primer_cancion[NOMBRE_CANCION], primer_cancion[ARTISTA])
+            destino = (segunda_cancion[NOMBRE_CANCION], segunda_cancion[ARTISTA])
+            camino = recomendify.camino_minimo(origen, destino)
             print(camino)
         elif comando == IMPORTANTES:
             resto = int(resto)
             canciones = recomendify.mas_importantes(resto)
             print(canciones)
         elif comando == RECOMENDACION:
-            info = resto.split(" ", 2)
-            tipo = info[0]
-            cantidad = int(info[1]) if len(info) > 1 else 0
-            canciones = info[2] if len(info) > 2 else ""
-            divididas = canciones.split(" >>>> ")
             canciones = []
-            guardar_canciones(divididas, canciones)
+            tipo, cantidad = datos_comando_recomendacion(resto, canciones)
             recomendaciones = recomendify.recomendar(recomendify.grafo_bipartito, tipo, cantidad, canciones, 50, 5000)
             print(recomendaciones)
         elif comando == CICLO:
