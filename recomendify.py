@@ -11,6 +11,8 @@ CAMINO = "camino"
 IMPORTANTES = "mas_importantes"
 RECOMENDACION = "recomendacion"
 CICLO = "ciclo"
+NOMBRE_CANCION = 0
+ARTISTA = 1
 
 class Recomendify:
     def __init__(self):
@@ -23,7 +25,7 @@ class Recomendify:
         for usuario, cancion, playlist in datos:
             if usuario not in self.diccionario:
                 self.diccionario[usuario] = {}
-            self.diccionario[usuario][(cancion[0], cancion[1])] = playlist
+            self.diccionario[usuario][(cancion[NOMBRE_CANCION], cancion[ARTISTA])] = playlist
 
     def agregar_nuevo_vertice(self, vertice, agregados):
         if vertice not in agregados:
@@ -50,9 +52,9 @@ class Recomendify:
                 playlist = self.diccionario[origen].get(destino)
 
                 if origen in usuarios_visitados:
-                    resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[0]} - {destino[1]}")
+                    resultado.append(f"tiene una playlist --> {playlist} --> donde aparece --> {destino[NOMBRE_CANCION]} - {destino[ARTISTA]}")
                     continue
-                resultado.append(f"{destino[0]} - {destino[1]} --> aparece en playlist --> {playlist} --> de --> {origen}")
+                resultado.append(f"{destino[NOMBRE_CANCION]} - {destino[ARTISTA]} --> aparece en playlist --> {playlist} --> de --> {origen}")
             elif destino in self.diccionario:
                 usuarios_visitados.add(destino)
                 playlist = self.diccionario[destino].get(origen)
@@ -60,7 +62,7 @@ class Recomendify:
                 if origen in canciones_visitadas:
                     resultado.append(f"aparece en playlist --> {playlist} --> de --> {destino}")
                     continue
-                resultado.append(f"{origen[0]} - {origen[1]} --> aparece en playlist --> {playlist} --> de --> {destino}")
+                resultado.append(f"{origen[NOMBRE_CANCION]} - {origen[ARTISTA]} --> aparece en playlist --> {playlist} --> de --> {destino}")
 
     def error_existencia_vertice(vertice):
         return f"Error: {vertice} no está en el grafo"
@@ -126,7 +128,7 @@ class Recomendify:
             (nodo, valor) for nodo, valor in pagerank.items() if self.es_cancion(nodo)
         ]
         canciones_importantes.sort(key=lambda x: x[1], reverse=True)
-        return "; ".join(f"{cancion[0]} - {cancion[1]}" for cancion, _ in canciones_importantes[:n])
+        return "; ".join(f"{cancion[NOMBRE_CANCION]} - {cancion[ARTISTA]}" for cancion, _ in canciones_importantes[:n])
 
     def es_cancion(self, nodo):
         return isinstance(nodo, tuple) and len(nodo) == 2
@@ -152,7 +154,7 @@ class Recomendify:
         if resultado is None:
             return "No se encontro recorrido"
         
-        return " --> ".join(f"{cancion[0]} - {cancion[1]}" for cancion in resultado)
+        return " --> ".join(f"{cancion[NOMBRE_CANCION]} - {cancion[ARTISTA]}" for cancion in resultado)
 
     def recomendar(self, grafo, tipo, cantidad, canciones, largo=100, iteraciones=500):
         nodos_iniciales = [cancion for cancion in canciones]
@@ -164,7 +166,7 @@ class Recomendify:
                 if isinstance(nodo, tuple) and nodo not in canciones
             }
             recs_ordenadas = sorted(recomendaciones.items(), key=lambda x: x[1], reverse=True)
-            return "; ".join(f"{cancion[0]} - {cancion[1]}" for cancion, _ in recs_ordenadas[:cantidad])
+            return "; ".join(f"{cancion[NOMBRE_CANCION]} - {cancion[ARTISTA]}" for cancion, _ in recs_ordenadas[:cantidad])
         elif tipo == USUARIOS:
             recomendaciones = {
                 nodo: valor
@@ -207,7 +209,7 @@ def separar_datos(info):
     cancion = mas_datos[1].split(" - ", 1)
     if len(cancion) < 2:
         return None, None
-    inicio = (cancion[0].strip(), cancion[1].strip())
+    inicio = (cancion[NOMBRE_CANCION].strip(), cancion[ARTISTA].strip())
 
     return largo, inicio
 
@@ -216,7 +218,7 @@ def guardar_canciones(divididas, canciones):
         actual = cancion.split(" - ", 1)
         if len(actual) < 2:
             continue
-        canciones.append((actual[0].strip(), actual[1].strip()))
+        canciones.append((actual[NOMBRE_CANCION].strip(), actual[ARTISTA].strip()))
 
 def main(): #modularizar
     param = argparse.ArgumentParser(None)
@@ -247,7 +249,7 @@ def main(): #modularizar
             if len(primer_cancion) < 2 or len(segunda_cancion) < 2:
                 print("Tanto el origen como el destino deben ser canciones")
                 continue
-            camino = recomendify.camino_minimo((primer_cancion[0], primer_cancion[1]), (segunda_cancion[0], segunda_cancion[1]))
+            camino = recomendify.camino_minimo((primer_cancion[NOMBRE_CANCION], primer_cancion[ARTISTA]), (segunda_cancion[NOMBRE_CANCION], segunda_cancion[ARTISTA]))
             print(camino)
         elif comando == IMPORTANTES:
             resto = int(resto)
