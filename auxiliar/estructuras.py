@@ -5,6 +5,39 @@ grafo_bipartito = Grafo()
 diccionario = {} #dicionario con el nombre como clave y el valor es una tupla de cancion y playlist en la que aparece
 grafo_canciones = Grafo()
 
+class Pagerank:
+    def __init__(self):
+        self.pagerank_cache = None
+    
+    def pagerank(self, d=0.85, iteraciones=100, tolerancia=1e-6):
+        if self.pagerank_cache is not None:
+            return self.pagerank_cache
+
+        vertices = grafo_bipartito.obtener_vertices()
+        N = len(vertices)
+        if N == 0:
+            return {}
+
+        grados_salida = {v: grafo_bipartito.grado_salida(v) or 1 for v in vertices}
+        pagerank_actual = {v: 1 / N for v in vertices}
+        for _ in range(iteraciones):
+            cambio_total = 0
+            pagerank_nuevo = {v: (1 - d) / N for v in vertices}
+            for v in vertices:
+                contribucion = d * pagerank_actual[v] / grados_salida[v]
+                for u in grafo_bipartito.obtener_adyacentes(v):
+                    pagerank_nuevo[u] += contribucion
+
+            for v in vertices:
+                cambio_total += abs(pagerank_nuevo[v] - pagerank_actual[v])
+                pagerank_actual[v] = pagerank_nuevo[v]
+
+            if cambio_total < tolerancia:
+                break
+
+        self.pagerank_cache = pagerank_actual
+        return pagerank_actual
+
 def cargar_diccionario(datos):
     for usuario, cancion, playlist in datos:
         if usuario not in diccionario:

@@ -4,8 +4,6 @@ import os
 from auxiliar.funciones_auxiliares import leer_archivo, leer_entrada, efectuar_comandos
 from auxiliar.estructuras import cargar_diccionario, cargar_grafo
 
-pagerank_cache = None
-
 param = argparse.ArgumentParser(None)
 param.add_argument("ruta", type=str)
 archivo = param.parse_args()
@@ -20,4 +18,4 @@ leer_archivo(archivo.ruta, imp)
 leer_entrada(entradas)
 cargar_diccionario(imp)
 cargar_grafo()
-efectuar_comandos(entradas, pagerank_cache)
+efectuar_comandos(entradas)

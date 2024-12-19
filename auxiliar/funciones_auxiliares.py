@@ -59,7 +59,7 @@ def datos_comando_recomendacion(info, total_canciones):
     guardar_canciones(divididas, total_canciones)
     return tipo, cantidad
 
-def efectuar_comandos(entradas, pagerank_cache):
+def efectuar_comandos(entradas):
     for entrada in entradas:
         datos = entrada.split(" ", 1)
         comando = datos[0]
@@ -80,7 +80,7 @@ def efectuar_comandos(entradas, pagerank_cache):
             print(camino)
         elif comando == IMPORTANTES:
             resto = int(resto)
-            canciones = mas_importantes(resto, pagerank_cache)
+            canciones = mas_importantes(resto)
             print(canciones)
         elif comando == RECOMENDACION:
             canciones = []
