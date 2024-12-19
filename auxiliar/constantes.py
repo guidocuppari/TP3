@@ -1,0 +1,9 @@
+NOMBRE_CANCION = 0
+ARTISTA = 1
+CANCIONES = "canciones"
+USUARIOS = "usuarios"
+RECOMENDACION = "recomendacion"
+CICLO = "ciclo"
+RANGO = "rango"
+IMPORTANTES = "mas_importantes"
+CAMINO = "camino"

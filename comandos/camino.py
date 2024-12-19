@@ -1,6 +1,6 @@
-from biblioteca import camino_minimo_bfs
-from estructuras import diccionario, grafo_bipartito
-from funciones_auxiliares import NOMBRE_CANCION, ARTISTA
+from auxiliar.biblioteca import camino_minimo_bfs
+from auxiliar.estructuras import diccionario, grafo_bipartito
+from auxiliar.constantes import NOMBRE_CANCION, ARTISTA
 
 def mensaje_camino_usuario(resultado, origen, destino, playlist, visitados_usuarios):
     if origen in visitados_usuarios:

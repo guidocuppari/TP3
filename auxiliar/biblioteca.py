@@ -1,8 +1,8 @@
 import random
 from collections import defaultdict
-from grafo import Grafo
-from heap import Heap
-from cola import Cola
+from tdas.grafo import Grafo
+from tdas.heap import Heap
+from tdas.cola import Cola
 
 def camino_minimo_dijkstra(grafo, origen, destino):
     distancia, padres = {}

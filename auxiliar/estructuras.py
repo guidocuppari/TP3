@@ -1,5 +1,5 @@
-from grafo import Grafo
-from funciones_auxiliares import NOMBRE_CANCION, ARTISTA
+from tdas.grafo import Grafo
+from auxiliar.constantes import NOMBRE_CANCION, ARTISTA
 
 grafo_bipartito = Grafo()
 diccionario = {} #dicionario con el nombre como clave y el valor es una tupla de cancion y playlist en la que aparece

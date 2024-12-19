@@ -1,6 +1,6 @@
-from biblioteca import dfs_ciclo_n
-from estructuras import grafo_canciones
-from funciones_auxiliares import NOMBRE_CANCION, ARTISTA
+from auxiliar.biblioteca import dfs_ciclo_n
+from auxiliar.estructuras import grafo_canciones
+from auxiliar.constantes import NOMBRE_CANCION, ARTISTA
 
 def buscar_ciclo_n(inicio, largo):
     visitados = [inicio]

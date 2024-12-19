@@ -1,5 +1,5 @@
-from biblioteca import random_walk_multiples
-from funciones_auxiliares import NOMBRE_CANCION, ARTISTA, CANCIONES, USUARIOS
+from auxiliar.biblioteca import random_walk_multiples
+from auxiliar.constantes import NOMBRE_CANCION, ARTISTA, CANCIONES, USUARIOS
 
 def recomendar(grafo, tipo, cantidad, canciones, largo=100, iteraciones=500):
     nodos_iniciales = [cancion for cancion in canciones]

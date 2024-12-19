@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import os
-from funciones_auxiliares import leer_archivo, leer_entrada, efectuar_comandos
-from estructuras import cargar_diccionario, cargar_grafo
+from auxiliar.funciones_auxiliares import leer_archivo, leer_entrada, efectuar_comandos
+from auxiliar.estructuras import cargar_diccionario, cargar_grafo
+
+pagerank_cache = None
 
 param = argparse.ArgumentParser(None)
 param.add_argument("ruta", type=str)
@@ -18,4 +20,4 @@ leer_archivo(archivo.ruta, imp)
 leer_entrada(entradas)
 cargar_diccionario(imp)
 cargar_grafo()
-efectuar_comandos(entradas)
+efectuar_comandos(entradas, pagerank_cache)

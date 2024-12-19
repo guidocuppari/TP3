@@ -1,20 +1,11 @@
 import sys
-from estructuras import cargar_grafo_de_canciones, grafo_bipartito
-from rango import rango
-from mas_importantes import mas_importantes
-from camino import camino_minimo
-from ciclo import buscar_ciclo_n
-from recomendacion import recomendar
-
-NOMBRE_CANCION = 0
-ARTISTA = 1
-CANCIONES = "canciones"
-USUARIOS = "usuarios"
-RECOMENDACION = "recomendacion"
-CICLO = "ciclo"
-RANGO = "rango"
-IMPORTANTES = "mas_importantes"
-CAMINO = "camino"
+from auxiliar.estructuras import cargar_grafo_de_canciones, grafo_bipartito
+from comandos.rango import rango
+from comandos.mas_importantes import mas_importantes
+from comandos.camino import camino_minimo
+from comandos.ciclo import buscar_ciclo_n
+from comandos.recomendacion import recomendar
+from auxiliar.constantes import *
 
 def leer_entrada(entradas):
     for linea in sys.stdin:
@@ -68,7 +59,7 @@ def datos_comando_recomendacion(info, total_canciones):
     guardar_canciones(divididas, total_canciones)
     return tipo, cantidad
 
-def efectuar_comandos(entradas):
+def efectuar_comandos(entradas, pagerank_cache):
     for entrada in entradas:
         datos = entrada.split(" ", 1)
         comando = datos[0]
@@ -89,7 +80,7 @@ def efectuar_comandos(entradas):
             print(camino)
         elif comando == IMPORTANTES:
             resto = int(resto)
-            canciones = mas_importantes(resto)
+            canciones = mas_importantes(resto, pagerank_cache)
             print(canciones)
         elif comando == RECOMENDACION:
             canciones = []
