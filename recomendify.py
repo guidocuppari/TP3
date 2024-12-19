@@ -3,7 +3,7 @@ from grafo import Grafo
 from biblioteca import camino_minimo_bfs, bfs_distancias, dfs_ciclo_n, random_walk_multiples
 import argparse
 import os
-import sys
+from informacion import leer_entrada, leer_archivo, efectuar_comandos
 
 CANCIONES = "canciones"
 USUARIOS = "usuarios"
@@ -186,7 +186,8 @@ class Recomendify:
 def cargar_estructuras(recomendify, datos):
     recomendify.cargar_diccionario(datos)
     recomendify.cargar_grafo()
-        
+
+archivo = ""  
 def main():
     param = argparse.ArgumentParser(None)
     param.add_argument("ruta", type=str)
@@ -195,13 +196,13 @@ def main():
     if not os.path.isfile(archivo.ruta):
         return "El archivo no existe"
 
-    imp = []
-    #leer_archivo(archivo.ruta, imp)
-    recomendify = Recomendify()
-    #cargar_estructuras(recomendify, imp)
-    entradas = []
-    #leer_entrada(entradas)
-    #efectuar_comandos(recomendify, entradas)
-
 if __name__ == "__main__":
     main()
+
+imp = []
+leer_archivo(archivo.ruta, imp)
+recomendify = Recomendify()
+cargar_estructuras(recomendify, imp)
+entradas = []
+leer_entrada(entradas)
+efectuar_comandos(recomendify, entradas)
